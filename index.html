@@ -92,6 +92,22 @@
   .seg button.on{background:#fff;color:var(--brand-deep);font-weight:600;box-shadow:0 1px 3px rgba(40,30,80,.12);}
   .demo-inline{width:100%;background:#FBFAFE;border-style:solid;border-color:var(--line);padding:6px 8px 6px 10px;margin-bottom:14px;border-radius:9px;}
 
+  /* 抬头类型二选一 */
+  .seg-block{width:100%;background:#F1EFF7;padding:3px;border-radius:9px;gap:2px;}
+  .seg-block button{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:5px;
+    padding:7px 8px;border-radius:7px;font-size:12.5px;color:var(--text-2);
+  }
+  .seg-block button.on{background:#fff;color:var(--brand-deep);font-weight:600;
+    box-shadow:0 1px 3px rgba(40,30,80,.13);}
+  .seg-block button .nb{
+    font-size:9.5px;font-weight:600;line-height:1;padding:2px 4px;border-radius:3px;
+    background:var(--brand);color:#fff;transform:translateY(-1px);
+  }
+  .seg-block button .nb-gray{background:#D8D4E4;color:#6F6A80;font-weight:500;}
+
+  .tipline.ok{background:var(--green-soft);color:#0E6B4D;}
+
   .scroll{flex:1;overflow-y:auto;padding:18px 22px 40px;}
 
   /* ---------- 规则提示 ---------- */
@@ -404,7 +420,7 @@
         <ol>
           <li>仅<span class="badgeline">已消费金额</span>可以申请开票发票，充值未消费的充值余额不可开具发票，您可酌情申请退款；已开票金额不可再次开票。</li>
           <li><b>自助开票</b>工作日 10:00～19:00 可提交，通常在提交后 2 个工作日内开具完成；<b>超过 ¥5,000</b> 的发票需提交特殊开票申请，经财务审核后人工开具。</li>
-          <li>根据我国税收相关政策要求，发票抬头需与实名认证主体名称一致：<b>个人认证</b>可开具企业抬头的增值税普通发票（单张 ≤ ¥5,000，不限张数），但无法自助开具增值税专用发票；<b>企业认证</b>仅可开具已认证企业的发票。</li>
+          <li><b>个人认证</b>可开具<span class="badgeline">企业抬头</span>的增值税普通发票：单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>；超过 ¥5,000 需提交特殊开票申请。<b>个人认证无法自助开具增值税专用发票</b>，需通过特殊开票申请表提交。<b>企业认证</b>仅可开具已认证企业的发票，抬头与税号不可修改。</li>
         </ol>
       </div>
 
@@ -507,13 +523,34 @@
     <div class="field">
       <label class="lbl"><span class="req">*</span>抬头名称和税号 <span id="titleTag" class="opt">个人认证</span></label>
 
-      <!-- 个人认证：可自主填写（含企业抬头） -->
+      <!-- 个人认证：抬头类型二选一（企业抬头为本次新增能力） -->
       <div id="personalTitle">
-        <input class="input" id="titleName" placeholder="请输入发票抬头名称" value="吕青华" style="margin-bottom:8px" />
-        <input class="input" id="titleTax" placeholder="请输入纳税人识别号（个人抬头可留空）" value="" />
-        <div class="tipline warn" id="personalHint">
-          <span class="ti">!</span>
-          <span>个人认证主体可开具<b>企业抬头</b>的增值税普通发票，需填写对方纳税人识别号；单张限额 ¥5,000，不限张数。</span>
+        <div class="seg seg-block" id="titleSeg">
+          <button class="on" data-kind="enterprise">企业抬头<span class="nb">本次新增</span></button>
+          <button data-kind="personal">个人抬头<span class="nb nb-gray">现状</span></button>
+        </div>
+
+        <!-- 企业抬头：用户自填对方企业信息 -->
+        <div id="titleEnterprise" style="margin-top:10px">
+          <input class="input" id="entName" placeholder="请输入企业抬头名称（完整工商名称）" value="杭州云枢科技有限公司" style="margin-bottom:8px" />
+          <input class="input" id="entTax" placeholder="请输入纳税人识别号（必填）" value="91330106MA2H8X3K7P" />
+          <div class="tipline ok" id="entHint">
+            <span class="ti">✓</span>
+            <span id="entHintTxt">个人认证可为企业开具<b>增值税普通发票</b>，单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>。</span>
+          </div>
+        </div>
+
+        <!-- 个人抬头：现状能力 -->
+        <div id="titlePersonal" style="display:none;margin-top:10px">
+          <div class="lockbar">
+            <span class="lock">🔒</span>
+            <span>吕青华</span>
+            <span class="sub">实名认证姓名</span>
+          </div>
+          <div class="tipline info">
+            <span class="ti">i</span>
+            <span>个人抬头沿用现有规则，本次需求未调整。</span>
+          </div>
         </div>
       </div>
 
@@ -543,7 +580,7 @@
       </div>
       <div class="tipline warn" id="limitBlock" style="display:none">
         <span class="ti">!</span>
-        <span>单张金额超过 <b>¥5,000</b>，超出线上自助开票限额，需提交<b>特殊开票申请</b>，经财务审核后人工开具。也可拆分多张（每张 ≤ ¥5,000）自助开具。</span>
+        <span id="limitBlockTxt"></span>
       </div>
     </div>
 
@@ -795,6 +832,19 @@ document.getElementById('certSeg2').addEventListener('click', e => {
   setCert(b.dataset.cert);
 });
 
+/* 抬头类型：企业抬头（本次新增）/ 个人抬头（现状） */
+let titleKind = 'enterprise';
+document.getElementById('titleSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  titleKind = b.dataset.kind;
+  document.querySelectorAll('#titleSeg button').forEach(x => {
+    x.classList.toggle('on', x.dataset.kind === titleKind);
+  });
+  document.getElementById('titleEnterprise').style.display = titleKind === 'enterprise' ? '' : 'none';
+  document.getElementById('titlePersonal').style.display = titleKind === 'personal' ? '' : 'none';
+  evaluate();
+});
+
 function applyCert(){
   const personal = cert === 'personal';
   document.getElementById('personalTitle').style.display = personal ? '' : 'none';
@@ -814,6 +864,9 @@ document.getElementById('subItem').addEventListener('change', e => {
   toast('已切换子项目：' + e.target.options[e.target.selectedIndex].text);
 });
 document.getElementById('invType').addEventListener('change', evaluate);
+['entName','entTax'].forEach(id => {
+  document.getElementById(id).addEventListener('input', evaluate);
+});
 
 /* 接收方式 */
 document.getElementById('cbMail').onclick = function(){
@@ -845,6 +898,20 @@ function evaluate(){
   if(amt <= 0){ amountInvalid = true; amtErrTxt.textContent = '请输入大于 0 的开票金额。'; }
   else if(amt > AVAILABLE){ amountInvalid = true; amtErrTxt.textContent = '开票金额超出可开票金额（' + money(AVAILABLE) + '），请调整金额或先充值消费。'; }
   amtErr.style.display = amountInvalid ? 'flex' : 'none';
+
+  /* 抬头/税号必填校验（仅个人认证 + 企业抬头） */
+  let titleInvalid = false;
+  if(cert === 'personal' && titleKind === 'enterprise'){
+    const en = document.getElementById('entName').value.trim();
+    const et = document.getElementById('entTax').value.trim();
+    titleInvalid = !en || !et;
+  }
+  const entHint = document.getElementById('entHint');
+  entHint.style.display =
+    (cert === 'personal' && titleKind === 'enterprise' && titleInvalid) ? 'none' : 'flex';
+  document.getElementById('entHintTxt').innerHTML = amt > 5000
+    ? '个人认证可为企业开具<b>增值税普通发票</b>；当前金额已超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。'
+    : '个人认证可为企业开具<b>增值税普通发票</b>，单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>。';
 
   const specialBlock = document.getElementById('specialBlock');
   const limitBlock = document.getElementById('limitBlock');
@@ -882,6 +949,12 @@ function evaluate(){
   if(amt > 5000){
     mode = 'specialApply';
     limitBlock.style.display = 'flex';
+    const over = money(amt - 5000);
+    document.getElementById('limitBlockTxt').innerHTML =
+      (cert === 'personal' && titleKind === 'enterprise'
+        ? '个人认证开具<b>企业抬头普票</b>的单张上限为 <b>¥5,000</b>，当前超出 <b>' + over + '</b>。'
+        : '单张金额超过 <b>¥5,000</b>，超出线上自助开票限额。') +
+      '超出部分需提交<b>特殊开票申请</b>，经财务审核后人工开具；也可拆分为多张（每张 ≤ ¥5,000）自助开具。';
     submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
     footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
@@ -893,8 +966,11 @@ function evaluate(){
   mode = 'self';
   prevBlock = null;
   submitBtn.textContent = '申请发票';
-  submitBtn.disabled = amountInvalid;
-  footNote.innerHTML = '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
+
+  submitBtn.disabled = amountInvalid || titleInvalid;
+  footNote.innerHTML = titleInvalid
+    ? '<span style="color:#E5484D">请填写完整的企业抬头名称与纳税人识别号</span>'
+    : '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
 }
 
 document.getElementById('drawer').addEventListener('click', e => {
@@ -914,16 +990,27 @@ document.getElementById('submitBtn').onclick = () => {
   const sub = document.getElementById('subItem');
   const subTxt = sub.options[sub.selectedIndex].text;
   const type = document.getElementById('invType').value === 'special' ? '增值税专用发票' : '增值税普通发票';
-  const title = cert === 'personal'
-    ? (document.getElementById('titleName').value || '未填写抬头')
-    : document.getElementById('companyName').textContent;
+
+  let title, taxNo;
+  if(cert === 'personal'){
+    if(titleKind === 'enterprise'){
+      title = document.getElementById('entName').value.trim() || '未填写企业抬头';
+      taxNo = document.getElementById('entTax').value.trim() || '—';
+    }else{
+      title = '吕青华（个人抬头）';
+      taxNo = '—';
+    }
+  }else{
+    title = document.getElementById('companyName').textContent;
+    taxNo = '91330106MA2H8X3K7P';
+  }
 
   const newRow = {
     id: 'RD' + Math.random().toString(36).slice(2, 10),
     apply: '2026-11-23 17:09',
     issue: null,
     title: title,
-    tax: cert === 'personal' ? (document.getElementById('titleTax').value || '—') : '91330106MA2H8X3K7P',
+    tax: taxNo,
     type: type,
     no: null,
     amount: amt,
