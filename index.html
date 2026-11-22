@@ -108,6 +108,16 @@
 
   .tipline.ok{background:var(--green-soft);color:#0E6B4D;}
 
+  /* 抬头名称 / 税号 分开展示 */
+  .split-row{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;
+  }
+  .split-item{
+    border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#FBFAFD;min-width:0;
+  }
+  .split-k{display:block;font-size:11px;color:var(--text-3);margin-bottom:3px;}
+  .split-v{display:block;font-size:12.5px;color:var(--text);word-break:break-all;line-height:1.5;}
+
   .scroll{flex:1;overflow-y:auto;padding:18px 22px 40px;}
 
   /* ---------- 规则提示 ---------- */
@@ -480,13 +490,7 @@
 
     <div class="field">
       <label class="lbl"><span class="req">*</span>开票金额</label>
-      <input class="input" id="amount" type="text" value="3000" inputmode="decimal" />
-      <div class="chips" id="chips">
-        <button class="chip" data-v="4999">4,999</button>
-        <button class="chip" data-v="5000">5,000</button>
-        <button class="chip" data-v="5001">5,001</button>
-        <button class="chip" data-v="12000">12,000</button>
-      </div>
+      <input class="input" id="amount" type="text" value="" inputmode="decimal" placeholder="请输入开票金额" />
       <div class="tipline err" id="amtErr" style="display:none">
         <span class="ti">!</span><span id="amtErrTxt"></span>
       </div>
@@ -513,6 +517,18 @@
       <div id="personalTitle">
         <select class="input" id="titleSelect"></select>
 
+        <!-- 抬头名称与税号分开展示 -->
+        <div class="split-row" id="titleSplit">
+          <div class="split-item">
+            <span class="split-k">抬头名称</span>
+            <span class="split-v" id="dispName">—</span>
+          </div>
+          <div class="split-item">
+            <span class="split-k">纳税人识别号</span>
+            <span class="split-v" id="dispTax">—</span>
+          </div>
+        </div>
+
         <!-- 自定义：展开输入 -->
         <div id="titleCustom" style="display:none;margin-top:8px">
           <input class="input" id="entName" placeholder="企业名称（完整工商名称）" style="margin-bottom:8px" />
@@ -531,18 +547,43 @@
           <span id="companyName">杭州云枢科技有限公司</span>
           <span class="sub">已认证</span>
         </div>
+        <div class="split-row" style="margin-top:8px">
+          <div class="split-item">
+            <span class="split-k">抬头名称</span>
+            <span class="split-v">杭州云枢科技有限公司</span>
+          </div>
+          <div class="split-item">
+            <span class="split-k">纳税人识别号</span>
+            <span class="split-v">91330106MA2H8X3K7P</span>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="field">
-      <label class="lbl"><span class="req">*</span>发票类型</label>
-      <select class="input" id="invType">
+      <label class="lbl">发票类型</label>
+      <div class="lockbar" id="invTypeFixed">
+        <span class="lock">🔒</span>
+        <span>增值税普通发票</span>
+        <span class="sub">个人认证仅支持普票</span>
+      </div>
+      <select class="input" id="invType" style="display:none">
         <option value="normal" selected>增值税普通发票</option>
         <option value="special">增值税专用发票</option>
       </select>
       <div class="tipline err" id="specialBlock" style="display:none">
         <span class="ti">!</span>
         <span id="specialBlockTxt"></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl">发票备注 <span class="opt">非必要不填写</span></label>
+      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
+      <div class="counter"><span id="remarkCount">0</span>/200</div>
+      <div class="tipline info">
+        <span class="ti">i</span>
+        <span>所填内容将原样写入发票备注栏，开票后不可修改。请确保信息准确，因备注内容有误引发的重开或退票，需自行承担相应成本。</span>
       </div>
     </div>
 
@@ -563,13 +604,6 @@
         <div class="def">默认 <b>138****6688</b></div>
         <input class="input" id="smsInput" placeholder="请输入接收手机号" style="display:none" />
       </div>
-    </div>
-
-    <div class="section-title"><b>发票备注</b></div>
-    <div class="field">
-      <label class="lbl">发票备注 <span class="opt">选填</span></label>
-      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明，将写入发票备注栏"></textarea>
-      <div class="counter"><span id="remarkCount">0</span>/200</div>
     </div>
   </div>
 
@@ -775,14 +809,14 @@ function resetDrawer(){
   document.getElementById('entName').value = '';
   document.getElementById('entTax').value = '';
   document.getElementById('titleCustom').style.display = 'none';
-  document.getElementById('amount').value = '3000';
+  document.getElementById('amount').value = '';
   document.getElementById('remark').value = '';
   document.getElementById('remarkCount').textContent = '0';
   document.getElementById('invType').value = 'normal';
   ['amtErr','specialBlock','limitBlock'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
-  buildTitleOptions(3000);
+  renderSplit();
   evaluate();
 }
 function closeDrawer(){ mask.classList.remove('show'); drawer.classList.remove('show'); }
@@ -830,7 +864,7 @@ function buildTitleOptions(amt){
     const grp = document.createElement('optgroup');
     grp.label = '历史开票抬头';
     HISTORY_TITLES.forEach(t => {
-      grp.appendChild(new Option(t.name + '  ' + t.tax, 'h:' + t.tax));
+      grp.appendChild(new Option(t.name, 'h:' + t.tax));
     });
     sel.appendChild(grp);
   }
@@ -867,10 +901,20 @@ function currentTitle(){
   return hit ? { ...hit, kind:'history' } : PERSONAL_TITLE;
 }
 
+/* 抬头名称 / 税号 拆分展示 */
+function renderSplit(){
+  const t = currentTitle();
+  document.getElementById('dispName').textContent = String(t.name).replace('（个人抬头）','');
+  document.getElementById('dispTax').textContent  = t.tax;
+}
+
 function applyCert(){
   const personal = cert === 'personal';
   document.getElementById('personalTitle').style.display = personal ? '' : 'none';
   document.getElementById('companyTitle').style.display = personal ? 'none' : '';
+  /* 个人认证固定普票，不出现类型下拉 */
+  document.getElementById('invTypeFixed').style.display = personal ? 'flex' : 'none';
+  document.getElementById('invType').style.display = personal ? 'none' : '';
   document.getElementById('availTxt').textContent = AVAILABLE.toLocaleString('zh-CN',{minimumFractionDigits:2});
   if(personal) buildTitleOptions(num(amountEl.value));
 }
@@ -878,16 +922,11 @@ function applyCert(){
 /* 金额输入 */
 const amountEl = document.getElementById('amount');
 amountEl.addEventListener('input', () => { amountEl.value = fmtInput(amountEl.value); evaluate(); });
-document.getElementById('chips').addEventListener('click', e => {
-  const c = e.target.closest('.chip'); if(!c) return;
-  amountEl.value = c.dataset.v; evaluate();
-});
 document.getElementById('subItem').addEventListener('change', e => {
   toast('已切换子项目：' + e.target.options[e.target.selectedIndex].text);
 });
-document.getElementById('invType').addEventListener('change', evaluate);
 ['entName','entTax'].forEach(id => {
-  document.getElementById(id).addEventListener('input', evaluate);
+  document.getElementById(id).addEventListener('input', () => { renderSplit(); evaluate(); });
 });
 
 /* 接收方式 */
@@ -911,19 +950,23 @@ let mode = 'self';
 let prevBlock = null;
 function evaluate(){
   const amt = num(amountEl.value);
-  const type = document.getElementById('invType').value;
 
   const amtErr = document.getElementById('amtErr');
   const amtErrTxt = document.getElementById('amtErrTxt');
   let amountInvalid = false;
 
-  if(amt <= 0){ amountInvalid = true; amtErrTxt.textContent = '请输入大于 0 的开票金额。'; }
-  else if(amt > AVAILABLE){ amountInvalid = true; amtErrTxt.textContent = '开票金额超出可开票金额（' + money(AVAILABLE) + '），请调整金额或先充值消费。'; }
-  amtErr.style.display = amountInvalid ? 'flex' : 'none';
+  if(String(amountEl.value).trim() === ''){
+    amountInvalid = true;
+    amtErr.style.display = 'none';
+  }
+  else if(amt <= 0){ amountInvalid = true; amtErrTxt.textContent = '请输入大于 0 的开票金额。'; amtErr.style.display = 'flex'; }
+  else if(amt > AVAILABLE){ amountInvalid = true; amtErrTxt.textContent = '开票金额超出可开票金额（' + money(AVAILABLE) + '），请调整金额或先充值消费。'; amtErr.style.display = 'flex'; }
+  else { amtErr.style.display = 'none'; }
 
   /* 抬头选项随金额联动；超限时强制个人抬头 */
   if(cert === 'personal') buildTitleOptions(amt);
   const t = currentTitle();
+  renderSplit();
 
   /* 自定义抬头必填校验 */
   let titleInvalid = false;
@@ -949,15 +992,12 @@ function evaluate(){
     });
   };
 
-  /* 专票：个人认证 → 表单申请；企业认证 → 沿用现状（表单申请） */
-  if(type === 'special'){
+  /* 企业认证：专票仍需走表单申请 */
+  if(cert === 'company' && document.getElementById('invType').value === 'special'){
     mode = 'form';
     specialBlock.style.display = 'flex';
     document.getElementById('specialBlockTxt').innerHTML =
-      (cert === 'personal'
-        ? '个人认证主体<b>无法自助开具增值税专用发票</b>。'
-        : '增值税专用发票<b>暂不支持自助开具</b>。') +
-      '请通过<a class="goForm">特殊开票申请表</a>提交申请，由财务审核后人工开具。';
+      '增值税专用发票<b>暂不支持自助开具</b>。请通过<a class="goForm">特殊开票申请表</a>提交申请，由财务审核后人工开具。';
     submitBtn.textContent = '前往表单申请';
     submitBtn.disabled = false;
     footNote.innerHTML = '将跳转至「特殊开票申请」表单，由财务人工审核开具。';
@@ -1008,7 +1048,9 @@ document.getElementById('submitBtn').onclick = () => {
 
   const sub = document.getElementById('subItem');
   const subTxt = sub.options[sub.selectedIndex].text;
-  const type = document.getElementById('invType').value === 'special' ? '增值税专用发票' : '增值税普通发票';
+  /* 个人认证固定普票 */
+  const type = (cert === 'company' && document.getElementById('invType').value === 'special')
+    ? '增值税专用发票' : '增值税普通发票';
 
   let title, taxNo;
   if(cert === 'personal'){
