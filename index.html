@@ -108,12 +108,10 @@
 
   .tipline.ok{background:var(--green-soft);color:#0E6B4D;}
 
-  /* 抬头名称 / 税号 分开展示 */
-  .split-row{
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;
-  }
-  .split-item{
-    border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#FBFAFD;min-width:0;
+  /* 抬头税号展示 */
+  .tax-block{
+    margin-top:8px;border:1px solid var(--line);border-radius:9px;
+    padding:8px 10px;background:#FBFAFD;
   }
   .split-k{display:block;font-size:11px;color:var(--text-3);margin-bottom:3px;}
   .split-v{display:block;font-size:12.5px;color:var(--text);word-break:break-all;line-height:1.5;}
@@ -504,19 +502,13 @@
       <div id="personalTitle">
         <select class="input" id="titleSelect"></select>
 
-        <!-- 抬头名称与税号分开展示 -->
-        <div class="split-row" id="titleSplit">
-          <div class="split-item">
-            <span class="split-k">抬头名称</span>
-            <span class="split-v" id="dispName">—</span>
-          </div>
-          <div class="split-item">
-            <span class="split-k">纳税人识别号</span>
-            <span class="split-v" id="dispTax">—</span>
-          </div>
+        <!-- 个人 / 历史抬头：名称已在上方选定，下方仅展示税号 -->
+        <div class="tax-block" id="taxBlock" style="display:none">
+          <span class="split-k">纳税人识别号</span>
+          <span class="split-v" id="dispTax">—</span>
         </div>
 
-        <!-- 自定义：展开输入 -->
+        <!-- 自定义：展开企业名称与税号两个输入 -->
         <div id="titleCustom" style="display:none;margin-top:8px">
           <input class="input" id="entName" placeholder="企业名称（完整工商名称）" style="margin-bottom:8px" />
           <input class="input" id="entTax" placeholder="纳税人识别号" />
@@ -534,15 +526,9 @@
           <span id="companyName">杭州云枢科技有限公司</span>
           <span class="sub">已认证</span>
         </div>
-        <div class="split-row" style="margin-top:8px">
-          <div class="split-item">
-            <span class="split-k">抬头名称</span>
-            <span class="split-v">杭州云枢科技有限公司</span>
-          </div>
-          <div class="split-item">
-            <span class="split-k">纳税人识别号</span>
-            <span class="split-v">91330106MA2H8X3K7P</span>
-          </div>
+        <div class="tax-block" style="margin-top:8px">
+          <span class="split-k">纳税人识别号</span>
+          <span class="split-v">91330106MA2H8X3K7P</span>
         </div>
       </div>
     </div>
@@ -881,10 +867,12 @@ function currentTitle(){
 }
 
 /* 抬头名称 / 税号 拆分展示 */
+/* 选择个人/历史抬头时展示税号；自定义时展开两个输入框 */
 function renderSplit(){
   const t = currentTitle();
-  document.getElementById('dispName').textContent = String(t.name).replace('（个人抬头）','');
-  document.getElementById('dispTax').textContent  = t.tax;
+  const custom = titleVal === CUSTOM_OPT;
+  document.getElementById('taxBlock').style.display = custom ? 'none' : '';
+  document.getElementById('dispTax').textContent = t.tax;
 }
 
 function applyCert(){
