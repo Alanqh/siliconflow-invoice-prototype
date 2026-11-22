@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>发票开具 · 自助开票改版原型</title>
+<style>
+  :root{
+    --brand:#6C4BF4;
+    --brand-deep:#5334C9;
+    --brand-soft:#F3EFFF;
+    --brand-line:#DCD2FF;
+    --text:#1D1B26;
+    --text-2:#5A5668;
+    --text-3:#8E8A9B;
+    --line:#E8E7EF;
+    --bg:#F6F6FA;
+    --white:#FFFFFF;
+    --red:#E5484D;
+    --red-soft:#FDEDED;
+    --green:#12805C;
+    --green-soft:#E6F6F0;
+    --amber:#B45309;
+    --amber-soft:#FFF6E5;
+    --radius:12px;
+    --shadow-drawer:-12px 0 40px rgba(28,22,60,.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",Arial,sans-serif;
+    color:var(--text);background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    font-size:14px;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,select,textarea{font-family:inherit;font-size:14px;color:var(--text);outline:none;}
+
+  /* ---------- 布局 ---------- */
+  .app{display:flex;height:100vh;overflow:hidden;}
+
+  /* ---------- 侧边栏 ---------- */
+  .sidebar{
+    width:212px;flex:0 0 212px;
+    background:linear-gradient(178deg,#6E4CE0 0%,#7B57E8 45%,#8A66EE 100%);
+    color:#fff;display:flex;flex-direction:column;
+    padding:16px 12px 12px;overflow-y:auto;
+  }
+  .logo{display:flex;align-items:center;gap:9px;padding:2px 8px 20px;}
+  .logo-mark{
+    width:26px;height:26px;border-radius:8px;flex:0 0 26px;
+    background:linear-gradient(135deg,#C9B6FF,#8B6BFF);
+    display:grid;place-items:center;font-weight:700;font-size:12px;color:#3A2483;
+  }
+  .logo-txt{display:flex;flex-direction:column;gap:2px;}
+  .logo-txt b{font-size:14px;letter-spacing:.5px;font-weight:600;}
+  .logo-txt small{font-size:10px;opacity:.55;letter-spacing:1px;}
+  .nav-group{margin-bottom:14px;}
+  .nav-title{font-size:11px;opacity:.5;padding:6px 10px;letter-spacing:.5px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 10px;border-radius:8px;font-size:13px;
+    color:rgba(255,255,255,.9);margin-bottom:1px;width:100%;text-align:left;
+  }
+  .nav-item .ic{width:15px;text-align:center;opacity:.85;font-size:13px;}
+  .nav-item:hover{background:rgba(255,255,255,.10);}
+  .nav-item.active{background:rgba(255,255,255,.20);font-weight:600;}
+  .nav-item.active .ic{opacity:1;}
+  .side-foot{margin-top:auto;font-size:10.5px;line-height:1.5;opacity:.45;padding:10px 10px 4px;}
+
+  /* ---------- 主区 ---------- */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+  .topbar{
+    height:52px;flex:0 0 52px;background:#fff;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:10px;padding:0 22px;
+  }
+  .topbar h1{font-size:15px;font-weight:600;}
+  .topbar .dot{width:3px;height:3px;border-radius:50%;background:#C6C4D0;}
+  .topbar .sub{font-size:12.5px;color:var(--text-3);}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+
+  .demo{
+    display:flex;align-items:center;gap:8px;background:#FAFAFD;
+    border:1px dashed #D6D3E4;border-radius:9px;padding:5px 8px 5px 10px;
+  }
+  .demo-label{font-size:11.5px;color:var(--text-3);white-space:nowrap;}
+  .seg{display:flex;background:#EDEBF4;border-radius:7px;padding:2px;}
+  .seg button{
+    font-size:11.5px;padding:4px 9px;border-radius:5px;color:var(--text-2);white-space:nowrap;
+  }
+  .seg button.on{background:#fff;color:var(--brand-deep);font-weight:600;box-shadow:0 1px 3px rgba(40,30,80,.12);}
+  .demo-inline{width:100%;background:#FBFAFE;border-style:solid;border-color:var(--line);padding:6px 8px 6px 10px;margin-bottom:14px;border-radius:9px;}
+
+  .scroll{flex:1;overflow-y:auto;padding:18px 22px 40px;}
+
+  /* ---------- 规则提示 ---------- */
+  .notice{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 18px 14px 16px;margin-bottom:16px;position:relative;
+  }
+  .notice::before{
+    content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;
+    border-radius:0 3px 3px 0;background:var(--brand);
+  }
+  .notice ol{margin:0;padding-left:16px;font-size:12.5px;line-height:1.95;color:var(--text-2);}
+  .notice ol li::marker{color:var(--text-3);font-size:11.5px;}
+  .notice b{color:var(--text);font-weight:600;}
+  .notice a{color:var(--brand);text-decoration:none;border-bottom:1px dashed var(--brand-line);}
+  .badgeline{display:inline;background:var(--brand-soft);color:var(--brand-deep);
+    font-size:11px;padding:1px 5px;border-radius:4px;font-weight:600;}
+
+  /* ---------- 工具条 ---------- */
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:8px 14px;border-radius:9px;font-size:13px;font-weight:500;
+    border:1px solid transparent;transition:.15s;white-space:nowrap;
+  }
+  .btn-primary{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(108,75,244,.28);}
+  .btn-primary:hover{background:#5C3BE6;}
+  .btn-primary:disabled{background:#D3CCEC;color:#fff;box-shadow:none;cursor:not-allowed;}
+  .btn-ghost{background:#fff;border-color:var(--line);color:var(--text-2);}
+  .btn-ghost:hover{border-color:#CFC9E4;color:var(--text);}
+  .btn-ghost:disabled{color:#B9B6C6;cursor:not-allowed;background:#FAFAFC;}
+  .btn-danger{background:var(--red);color:#fff;}
+  .btn-danger:hover{background:#CE3A3F;}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:7px;}
+
+  .filters{margin-left:auto;display:flex;gap:2px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:3px;}
+  .filters button{font-size:12px;padding:5px 11px;border-radius:6px;color:var(--text-2);}
+  .filters button.on{background:var(--brand-soft);color:var(--brand-deep);font-weight:600;}
+  .filters button small{opacity:.6;margin-left:3px;font-size:10.5px;}
+
+  /* ---------- 表格 ---------- */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .panel-head{display:flex;align-items:center;gap:8px;padding:14px 18px 12px;}
+  .panel-head h2{font-size:14px;font-weight:600;}
+  .panel-head .count{font-size:12px;color:var(--text-3);}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:1140px;}
+  thead th{
+    text-align:left;font-weight:500;color:var(--text-3);font-size:12px;
+    padding:9px 12px;background:#FBFAFE;border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  tbody td{padding:11px 12px;border-bottom:1px solid #F2F1F6;vertical-align:middle;white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FCFBFE;}
+  .id-cell{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:6px;}
+  .copy{opacity:0;color:var(--brand);font-size:11px;cursor:pointer;transition:.15s;}
+  tbody tr:hover .copy{opacity:1;}
+  .muted{color:var(--text-3);}
+  .money{font-variant-numeric:tabular-nums;font-weight:600;}
+  .tag{
+    display:inline-flex;align-items:center;gap:4px;font-size:11.5px;
+    padding:2px 7px;border-radius:5px;font-weight:500;line-height:1.6;
+  }
+  .tag-self{background:var(--brand-soft);color:var(--brand-deep);}
+  .tag-manual{background:#F0F0F5;color:#63606F;}
+  .tag-issued{background:var(--green-soft);color:var(--green);}
+  .tag-issuing{background:var(--amber-soft);color:var(--amber);}
+  .tag-voided{background:#F2F1F5;color:#8B879A;text-decoration:line-through;}
+  .tag-special{background:#EEF3FF;color:#2F5FD0;}
+  tbody tr.is-voided td:not(:last-child){color:#A9A6B6;}
+  .row-actions{display:flex;align-items:center;gap:4px;}
+  .dl-group{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;}
+  .dl-group button{padding:5px 9px;font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:5px;}
+  .dl-group button:hover{background:#F6F4FE;color:var(--brand-deep);}
+  .dl-group .caret{border-left:1px solid var(--line);padding:5px 6px;}
+  .dl-group button:disabled{color:#C2BFCD;cursor:not-allowed;background:#fff;}
+  .txt-btn{font-size:12px;color:var(--text-2);padding:5px 7px;border-radius:6px;}
+  .txt-btn:hover{background:#F6F4FE;color:var(--brand-deep);}
+  .txt-btn.danger:hover{background:var(--red-soft);color:var(--red);}
+  .txt-btn:disabled{color:#C9C6D3;cursor:not-allowed;background:none;}
+  .hint-inline{font-size:11.5px;color:var(--text-3);}
+
+  /* ---------- 抽屉 ---------- */
+  .mask{
+    position:fixed;inset:0;background:rgba(24,18,45,.42);
+    opacity:0;pointer-events:none;transition:.22s;z-index:60;
+  }
+  .mask.show{opacity:1;pointer-events:auto;}
+  .drawer{
+    position:fixed;top:0;right:0;bottom:0;width:452px;max-width:94vw;background:#fff;
+    transform:translateX(102%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+    z-index:61;display:flex;flex-direction:column;box-shadow:var(--shadow-drawer);
+  }
+  .drawer.show{transform:translateX(0);}
+  .drawer-head{
+    flex:0 0 auto;display:flex;align-items:center;gap:10px;
+    padding:16px 20px;border-bottom:1px solid var(--line);
+  }
+  .drawer-head h2{font-size:15px;font-weight:600;}
+  .drawer-head .close{margin-left:auto;width:26px;height:26px;border-radius:7px;
+    display:grid;place-items:center;color:var(--text-3);font-size:16px;}
+  .drawer-head .close:hover{background:#F4F3F8;color:var(--text);}
+  .drawer-body{flex:1;overflow-y:auto;padding:16px 20px 28px;scroll-behavior:smooth;}
+  .drawer-foot{
+    flex:0 0 auto;padding:12px 20px 16px;border-top:1px solid var(--line);background:#fff;
+  }
+
+  .amount-card{
+    background:linear-gradient(135deg,#F5F1FF,#F0EBFF);
+    border:1px solid #E4DBFF;border-radius:11px;padding:13px 15px;margin-bottom:16px;
+  }
+  .amount-card .cap{font-size:12px;color:#6B6383;margin-bottom:5px;}
+  .amount-card .val{font-size:22px;font-weight:700;color:var(--brand-deep);font-variant-numeric:tabular-nums;letter-spacing:-.5px;}
+  .amount-card .val span{font-size:13px;font-weight:500;}
+  .amount-card .sum{font-size:11.5px;color:#7B7392;margin-top:7px;line-height:1.7;}
+  .amount-card .sum i{font-style:normal;color:#B0A9C6;margin:0 3px;}
+
+  .field{margin-bottom:14px;}
+  .field > label.lbl{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-2);margin-bottom:6px;}
+  .req{color:var(--red);font-size:12px;line-height:1;}
+  .opt{font-size:11px;color:var(--text-3);background:#F3F2F7;border-radius:4px;padding:1px 5px;margin-left:2px;}
+  .input,select.input,textarea.input{
+    width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 11px;
+    background:#fff;transition:.15s;
+  }
+  .input:focus,select.input:focus,textarea.input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(108,75,244,.12);}
+  .input::placeholder{color:#AFACBB;}
+  select.input{
+    appearance:none;
+    background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%238E8A9B' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;
+  }
+  .combo{
+    display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;
+  }
+  .combo:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(108,75,244,.12);}
+  .combo-fixed{
+    flex:0 0 auto;padding:9px 10px;background:#FAF9FD;color:var(--text-2);
+    font-size:13px;border-right:1px solid var(--line);
+  }
+  .combo select{
+    flex:1;border:none;background-color:#fff;
+    background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%238E8A9B' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;
+    appearance:none;padding:9px 28px 9px 10px;font-size:13px;
+  }
+
+  .chips{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;}
+  .chip{
+    font-size:11px;color:var(--text-2);border:1px dashed #D9D5E8;border-radius:20px;
+    padding:2px 9px;background:#FBFAFD;
+  }
+  .chip:hover{border-color:var(--brand-line);color:var(--brand-deep);background:var(--brand-soft);}
+
+  .section-title{
+    display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-3);
+    margin:18px 0 10px;
+  }
+  .section-title::after{content:"";flex:1;height:1px;background:var(--line);}
+  .section-title b{font-weight:600;color:var(--text-2);font-size:12.5px;letter-spacing:.2px;}
+
+  .lockbar{
+    display:flex;align-items:center;gap:8px;background:#FAF9FD;border:1px solid var(--line);
+    border-radius:9px;padding:9px 11px;font-size:13px;color:var(--text);
+  }
+  .lockbar .lock{color:var(--text-3);font-size:12px;}
+  .lockbar .sub{color:var(--text-3);font-size:11.5px;margin-left:auto;}
+
+  .tipline{
+    display:flex;gap:7px;font-size:11.5px;line-height:1.65;border-radius:8px;
+    padding:8px 10px;margin-top:7px;
+  }
+  .tipline.info{background:#F7F6FC;color:#6A6578;}
+  .tipline.warn{background:var(--amber-soft);color:#8A5A0B;}
+  .tipline.err{background:var(--red-soft);color:#A32A2E;}
+  .tipline .ti{flex:0 0 auto;font-size:11px;line-height:1.7;}
+  .tipline a{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
+
+  .recv-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;}
+  .cbox{
+    flex:0 0 15px;width:15px;height:15px;border:1.4px solid #C9C5D8;border-radius:4px;
+    margin-top:3px;display:grid;place-items:center;cursor:pointer;transition:.15s;background:#fff;
+  }
+  .cbox.on{background:var(--brand);border-color:var(--brand);}
+  .cbox.on::after{content:"";width:7px;height:4px;border-left:1.8px solid #fff;border-bottom:1.8px solid #fff;transform:rotate(-45deg) translateY(-1px);}
+  .recv-main{flex:1;min-width:0;}
+  .recv-main .cap{font-size:12.5px;color:var(--text);margin-bottom:4px;}
+  .recv-main .def{font-size:11px;color:var(--text-3);margin-bottom:5px;}
+  .recv-main .def b{color:var(--text-2);font-weight:500;}
+
+  textarea.input{resize:vertical;min-height:64px;line-height:1.6;}
+  .counter{text-align:right;font-size:11px;color:var(--text-3);margin-top:4px;}
+
+  .foot-note{font-size:11.5px;color:var(--text-3);text-align:center;margin-bottom:10px;line-height:1.6;}
+  .foot-note b{color:var(--brand-deep);}
+
+  /* ---------- 弹窗 ---------- */
+  .modal{
+    position:fixed;inset:0;z-index:70;display:none;place-items:center;
+    background:rgba(24,18,45,.45);padding:20px;
+  }
+  .modal.show{display:grid;}
+  .modal-card{
+    width:440px;max-width:100%;background:#fff;border-radius:14px;
+    box-shadow:0 24px 70px rgba(20,14,45,.28);overflow:hidden;
+    animation:pop .18s ease-out;
+  }
+  @keyframes pop{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-head{padding:18px 20px 0;display:flex;align-items:flex-start;gap:11px;}
+  .modal-icon{
+    flex:0 0 34px;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:var(--red-soft);color:var(--red);font-size:16px;
+  }
+  .modal-head h3{font-size:15px;font-weight:600;margin-bottom:3px;}
+  .modal-head p{font-size:12px;color:var(--text-3);line-height:1.6;}
+  .modal-body{padding:14px 20px 4px;}
+  .void-info{
+    border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:#FBFAFD;
+    font-size:12.5px;line-height:1.9;
+  }
+  .void-info .k{color:var(--text-3);display:inline-block;width:64px;}
+  .void-warn{
+    background:var(--red-soft);border-radius:9px;padding:10px 12px;margin-top:10px;
+    font-size:11.5px;color:#A32A2E;line-height:1.75;
+  }
+  .void-warn ul{margin:4px 0 0;padding-left:15px;}
+  .void-warn li::marker{color:#D88;}
+  .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px 18px;}
+
+  /* ---------- 下拉浮层 ---------- */
+  .popover{
+    position:fixed;z-index:80;background:#fff;border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 10px 30px rgba(30,22,60,.16);padding:5px;display:none;min-width:186px;
+  }
+  .popover.show{display:block;}
+  .popover .po-head{font-size:10.5px;color:var(--text-3);padding:5px 9px 4px;letter-spacing:.3px;}
+  .popover button{
+    display:flex;width:100%;align-items:center;gap:8px;text-align:left;
+    padding:7px 9px;border-radius:7px;font-size:12.5px;color:var(--text-2);
+  }
+  .popover button:hover{background:#F6F4FE;color:var(--brand-deep);}
+  .popover button .fmt{
+    font-size:10px;background:#F1EFFA;color:#6B5FA8;border-radius:3px;padding:1px 4px;font-weight:600;
+  }
+  .popover .sep{height:1px;background:var(--line);margin:4px 6px;}
+
+  /* ---------- toast ---------- */
+  .toasts{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;}
+  .toast{
+    background:#241E38;color:#fff;font-size:12.5px;padding:9px 16px;border-radius:9px;
+    box-shadow:0 8px 24px rgba(20,14,45,.3);display:flex;align-items:center;gap:8px;
+    animation:tin .2s ease-out;
+  }
+  .toast .dot{width:6px;height:6px;border-radius:50%;background:#7DF0C0;}
+  @keyframes tin{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">硅</div>
+      <div class="logo-txt"><b>硅基流动</b><small>SILICONFLOW</small></div>
+    </div>
+    <div class="nav-group">
+      <button class="nav-item"><span class="ic">▢</span>文本对话</button>
+      <button class="nav-item"><span class="ic">▢</span>图像生成</button>
+      <button class="nav-item"><span class="ic">▢</span>视频生成</button>
+      <button class="nav-item"><span class="ic">▢</span>语音合成</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">账户管理</div>
+      <button class="nav-item"><span class="ic">◉</span>实名认证</button>
+      <button class="nav-item"><span class="ic">⚿</span>API 密钥</button>
+      <button class="nav-item"><span class="ic">◫</span>余额充值</button>
+      <button class="nav-item"><span class="ic">≡</span>费用明细</button>
+      <button class="nav-item active"><span class="ic">▤</span>发票开具</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-title">活动中心</div>
+      <button class="nav-item"><span class="ic">◈</span>邀请计划 <span style="margin-left:auto;font-size:10px;opacity:.5">↗</span></button>
+      <button class="nav-item"><span class="ic">◈</span>TokenPlus</button>
+      <button class="nav-item"><span class="ic">◈</span>文档中心 <span style="margin-left:auto;font-size:10px;opacity:.5">↗</span></button>
+      <button class="nav-item"><span class="ic">◈</span>工单反馈 <span style="margin-left:auto;font-size:10px;opacity:.5">↗</span></button>
+    </div>
+    <div class="side-foot">Beijing-GuJiLiuDongAiYun<br>FuWu-2025120150112</div>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="topbar">
+      <h1>发票开具</h1>
+      <span class="dot"></span>
+      <span class="sub">自助开票改版原型</span>
+      <div class="topbar-right">
+        <div class="demo">
+          <span class="demo-label">演示身份</span>
+          <div class="seg" id="certSeg">
+            <button class="on" data-cert="personal">个人认证</button>
+            <button data-cert="company">企业认证</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll">
+      <div class="notice">
+        <ol>
+          <li>仅<span class="badgeline">已消费金额</span>可以申请开票发票，充值未消费的充值余额不可开具发票，您可酌情申请退款；已开票金额不可再次开票。</li>
+          <li><b>自助开票</b>工作日 10:00～19:00 可提交，通常在提交后 2 个工作日内开具完成；<b>超过 ¥5,000</b> 的发票需提交特殊开票申请，经财务审核后人工开具。</li>
+          <li>根据我国税收相关政策要求，发票抬头需与实名认证主体名称一致：<b>个人认证</b>可开具企业抬头的增值税普通发票（单张 ≤ ¥5,000，不限张数），但无法自助开具增值税专用发票；<b>企业认证</b>仅可开具已认证企业的发票。</li>
+        </ol>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary" id="openApply"><span style="font-size:13px">📄</span>申请发票</button>
+        <span class="hint-inline">个人认证与企业认证均可在线上自助申请，规则差异见弹窗内提示</span>
+        <div class="filters" id="filters">
+          <button class="on" data-f="all">全部 <small>7</small></button>
+          <button data-f="issued">已开票 <small>5</small></button>
+          <button data-f="issuing">开票中 <small>1</small></button>
+          <button data-f="voided">已作废 <small>1</small></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>发票记录</h2>
+          <span class="count" id="rowCount">共 7 条</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>申请记录 ID</th>
+                <th>申请时间</th>
+                <th>开票时间</th>
+                <th>抬头和税号</th>
+                <th>发票类型</th>
+                <th>票号</th>
+                <th style="text-align:right">开票金额</th>
+                <th>开票方式</th>
+                <th>状态</th>
+                <th style="width:150px">操作</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 申请抽屉 -->
+<div class="mask" id="mask"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h2>申请发票</h2>
+    <button class="close" id="closeDrawer">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div class="amount-card">
+      <div class="cap">可开票金额</div>
+      <div class="val">¥ <span id="availTxt">12,860.42</span></div>
+      <div class="sum">累计已消费金额 ¥12,860.42 <i>·</i> 欠款 ¥0.00 <i>·</i> 累计已开票金额 ¥0.00</div>
+    </div>
+
+    <div class="field">
+      <label class="lbl"><span class="req">*</span>开票金额</label>
+      <input class="input" id="amount" type="text" value="0.42" inputmode="decimal" />
+      <div class="chips" id="chips">
+        <button class="chip" data-v="0.42">0.42</button>
+        <button class="chip" data-v="4999">4,999</button>
+        <button class="chip" data-v="5000">5,000</button>
+        <button class="chip" data-v="5001">5,001</button>
+        <button class="chip" data-v="12000">12,000</button>
+      </div>
+      <div class="tipline err" id="amtErr" style="display:none">
+        <span class="ti">!</span><span id="amtErrTxt"></span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl"><span class="req">*</span>费用项名称</label>
+      <div class="combo">
+        <span class="combo-fixed">生产生活服务</span>
+        <select id="subItem">
+          <option value="api" selected>模型API调用(siliconflow.cn)</option>
+          <option value="tech">技术服务(siliconflow.cn)</option>
+          <option value="cloud">云服务(siliconflow.cn)</option>
+        </select>
+      </div>
+      <div class="tipline info">
+        <span class="ti">i</span>
+        <span>自定义子项目名称已包含站点标识，将随发票明细一起开具，默认选中「模型API调用(siliconflow.cn)」。</span>
+      </div>
+    </div>
+
+    <div class="section-title"><b>开票信息</b></div>
+
+    <div class="demo demo-inline">
+      <span class="demo-label">演示身份</span>
+      <div class="seg" id="certSeg2">
+        <button class="on" data-cert="personal">个人认证</button>
+        <button data-cert="company">企业认证</button>
+      </div>
+      <span style="font-size:11px;color:#A9A5B8;margin-left:auto">切换以演示规则差异</span>
+    </div>
+
+    <div class="field">
+      <label class="lbl"><span class="req">*</span>抬头名称和税号 <span id="titleTag" class="opt">个人认证</span></label>
+
+      <!-- 个人认证：可自主填写（含企业抬头） -->
+      <div id="personalTitle">
+        <input class="input" id="titleName" placeholder="请输入发票抬头名称" value="吕青华" style="margin-bottom:8px" />
+        <input class="input" id="titleTax" placeholder="请输入纳税人识别号（个人抬头可留空）" value="" />
+        <div class="tipline warn" id="personalHint">
+          <span class="ti">!</span>
+          <span>个人认证主体可开具<b>企业抬头</b>的增值税普通发票，需填写对方纳税人识别号；单张限额 ¥5,000，不限张数。</span>
+        </div>
+      </div>
+
+      <!-- 企业认证：锁定已认证企业 -->
+      <div id="companyTitle" style="display:none">
+        <div class="lockbar">
+          <span class="lock">🔒</span>
+          <span id="companyName">杭州云枢科技有限公司</span>
+          <span class="sub">已认证</span>
+        </div>
+        <div class="tipline info">
+          <span class="ti">i</span>
+          <span>企业认证账号仅可开具<b>已认证企业</b>的发票，抬头与税号不可修改。如需变更认证主体，请前往「实名认证」。</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lbl"><span class="req">*</span>发票类型</label>
+      <select class="input" id="invType">
+        <option value="normal" selected>增值税普通发票</option>
+        <option value="special">增值税专用发票</option>
+      </select>
+      <div class="tipline err" id="specialBlock" style="display:none">
+        <span class="ti">!</span>
+        <span id="specialBlockTxt"></span>
+      </div>
+      <div class="tipline warn" id="limitBlock" style="display:none">
+        <span class="ti">!</span>
+        <span>单张金额超过 <b>¥5,000</b>，超出线上自助开票限额，需提交<b>特殊开票申请</b>，经财务审核后人工开具。也可拆分多张（每张 ≤ ¥5,000）自助开具。</span>
+      </div>
+    </div>
+
+    <div class="section-title"><b>发票接收</b></div>
+
+    <div class="recv-row">
+      <div class="cbox on" id="cbMail"></div>
+      <div class="recv-main">
+        <div class="cap">邮箱接收</div>
+        <div class="def">默认使用 绑定邮箱 <b>lqh@example.com</b> 接收发票，如需使用其他邮箱请认真核对</div>
+        <input class="input" id="mailInput" placeholder="请输入接收邮箱" style="display:none" />
+      </div>
+    </div>
+    <div class="recv-row">
+      <div class="cbox" id="cbSms"></div>
+      <div class="recv-main">
+        <div class="cap">短信接收</div>
+        <div class="def">默认使用 绑定手机 <b>138****6688</b> 接收发票，如需使用其他手机请认真核对</div>
+        <input class="input" id="smsInput" placeholder="请输入接收手机号" style="display:none" />
+      </div>
+    </div>
+
+    <div class="section-title"><b>发票备注</b></div>
+    <div class="field">
+      <label class="lbl">发票备注 <span class="opt">选填</span></label>
+      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明等，将自动写入发票备注栏"></textarea>
+      <div class="counter"><span id="remarkCount">0</span>/200</div>
+      <div class="tipline info">
+        <span class="ti">i</span>
+        <span>此处填写内容将<b>原样透传</b>至发票备注栏，开票后不可修改，请确认无误。</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-foot">
+    <div class="foot-note" id="footNote">提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看与下载。</div>
+    <button class="btn btn-primary" id="submitBtn" style="width:100%;padding:11px">申请发票</button>
+  </div>
+</aside>
+
+<!-- 作废确认 -->
+<div class="modal" id="voidModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-icon">⚠</div>
+      <div>
+        <h3>确认作废该发票？</h3>
+        <p>作废后该发票立即失效，对应开票金额将退回可开票额度。</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="void-info" id="voidInfo"></div>
+      <div class="void-warn">
+        请确认以下事项后再操作：
+        <ul>
+          <li>发票是否已交付客户或已用于报销</li>
+          <li>客户是否已完成抵扣或入账（如已入账需另行红冲处理）</li>
+          <li>作废后如需重新开具，需重新提交申请</li>
+        </ul>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label class="lbl">作废原因</label>
+        <select class="input" id="voidReason">
+          <option>开票信息有误（抬头/税号）</option>
+          <option>金额填写错误</option>
+          <option>客户要求重新开具</option>
+          <option>其他原因</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="voidCancel">取消</button>
+      <button class="btn btn-danger" id="voidConfirm">确认作废</button>
+    </div>
+  </div>
+</div>
+
+<!-- 下载格式浮层 -->
+<div class="popover" id="fmtPop">
+  <div class="po-head">选择下载格式</div>
+  <button data-fmt="zip"><span class="fmt">ZIP</span>全部格式打包下载</button>
+  <div class="sep"></div>
+  <button data-fmt="pdf"><span class="fmt">PDF</span>仅下载 PDF</button>
+  <button data-fmt="ofd"><span class="fmt">OFD</span>仅下载 OFD</button>
+  <button data-fmt="xml"><span class="fmt">XML</span>仅下载 明细 XML</button>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============ 数据 ============ */
+const AVAILABLE = 12860.42;
+
+const rows = [
+  { id:'RDlavccuebqg', apply:'2026-11-13 14:22', issue:'2026-11-13 14:23', title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:'26112000000123', amount:0.42, source:'self', status:'issued' },
+  { id:'Dbbkeaqdvvu', apply:'2026-11-13 10:05', issue:'2026-11-13 10:06', title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:'26112000000119', amount:0.42, source:'self', status:'issued' },
+  { id:'RDm2k8xzq1', apply:'2026-11-12 16:40', issue:'2026-11-13 09:12', title:'杭州云枢科技有限公司', tax:'91330106MA2H8X3K7P', type:'增值税普通发票', no:'26112000000108', amount:3200, source:'self', status:'issued' },
+  { id:'RDn7pc4vte', apply:'2026-11-10 11:02', issue:'2026-11-12 15:30', title:'北京智算信息技术有限公司', tax:'91110108MA01T9XK4M', type:'增值税普通发票', no:'26112000000096', amount:8800, source:'manual', status:'issued' },
+  { id:'RDq1f9abzc', apply:'2026-11-09 09:47', issue:'2026-11-10 10:20', title:'上海码上智能科技有限公司', tax:'91310115MA1K4Q3L2N', type:'增值税专用发票', no:'26112000000071', amount:15000, source:'manual', status:'issued' },
+  { id:'RDr5t2mxdu', apply:'2026-11-08 20:11', issue:null, title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:null, amount:128, source:'self', status:'issuing' },
+  { id:'RDs9k3qwnb', apply:'2026-11-05 13:20', issue:'2026-11-05 13:21', title:'成都轻舟数据有限公司', tax:'91510100MA6C2P8T5R', type:'增值税普通发票', no:'26111900000882', amount:2600, source:'self', status:'voided' }
+];
+
+const money = n => '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+const fmtInput = s => s.replace(/[^\d.]/g,'');
+const num = s => { const v = parseFloat(String(s).replace(/,/g,'')); return isNaN(v) ? 0 : v; };
+
+const STATUS_TXT = { issued:'已开票', issuing:'开票中', voided:'已作废' };
+
+/* ============ 表格渲染 ============ */
+let filter = 'all';
+
+function renderTable(){
+  const tb = document.getElementById('tbody');
+  const list = rows.filter(r => filter === 'all' || r.status === filter);
+  tb.innerHTML = list.map(r => {
+    const canDownload = r.status === 'issued';
+    const canVoid = r.status === 'issued' && r.source === 'self';
+    const voidTip = r.source === 'manual' ? '人工开具的发票不支持自助作废，请联系财务' : (r.status === 'voided' ? '该发票已作废' : (r.status === 'issuing' ? '开票中暂不可作废' : ''));
+
+    return `
+    <tr class="${r.status === 'voided' ? 'is-voided' : ''}">
+      <td><div class="id-cell">${r.id}<span class="copy" data-copy="${r.id}" title="复制">⎘</span></div></td>
+      <td class="muted">${r.apply}</td>
+      <td class="${r.issue ? 'muted' : 'muted'}">${r.issue || '—'}</td>
+      <td>
+        <div style="font-size:12.5px">${r.title}</div>
+        <div class="muted" style="font-size:11px;margin-top:2px">${r.tax}</div>
+      </td>
+      <td>${r.type}</td>
+      <td class="muted" style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">${r.no || '—'}</td>
+      <td class="money" style="text-align:right">${money(r.amount)}</td>
+      <td><span class="tag ${r.source === 'self' ? 'tag-self' : 'tag-manual'}">${r.source === 'self' ? '自助申请' : '人工开具'}</span></td>
+      <td><span class="tag tag-${r.status}">${STATUS_TXT[r.status]}</span></td>
+      <td>
+        <div class="row-actions">
+          <div class="dl-group">
+            <button ${canDownload ? '' : 'disabled'} data-dl="${r.id}" data-fmt="zip" title="${canDownload ? '默认打包下载 PDF + OFD + XML' : '当前状态不可下载'}">下载</button>
+            <button class="caret" ${canDownload ? '' : 'disabled'} data-caret="${r.id}" title="选择其他格式">▾</button>
+          </div>
+          <button class="txt-btn ${canVoid ? 'danger' : ''}" ${canVoid ? '' : 'disabled'} data-void="${r.id}" title="${voidTip}">作废</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('rowCount').textContent = '共 ' + list.length + ' 条';
+}
+
+/* ============ 交互：筛选 / 复制 / 下载 ============ */
+document.getElementById('filters').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#filters button').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); filter = b.dataset.f; renderTable();
+});
+
+document.getElementById('tbody').addEventListener('click', e => {
+  const copy = e.target.closest('[data-copy]');
+  if(copy){ navigator.clipboard?.writeText(copy.dataset.copy); toast('已复制申请记录 ID'); return; }
+
+  const dl = e.target.closest('[data-dl]');
+  if(dl){ doDownload(dl.dataset.dl, dl.dataset.fmt); return; }
+
+  const caret = e.target.closest('[data-caret]');
+  if(caret){ openFmtPop(caret, caret.dataset.caret); return; }
+
+  const vb = e.target.closest('[data-void]');
+  if(vb && !vb.disabled){ openVoid(vb.dataset.void); return; }
+});
+
+/* 下载 */
+function doDownload(id, fmt){
+  const map = { zip:'PDF + OFD + XML 压缩包', pdf:'PDF', ofd:'OFD', xml:'明细 XML' };
+  const r = rows.find(x => x.id === id);
+  toast('正在下载「' + (map[fmt] || fmt) + '」· 票号 ' + (r?.no || '—'));
+  closeFmtPop();
+}
+
+/* 格式浮层 */
+const fmtPop = document.getElementById('fmtPop');
+let fmtRowId = null;
+function openFmtPop(anchor, id){
+  fmtRowId = id;
+  const rect = anchor.getBoundingClientRect();
+  fmtPop.classList.add('show');
+  const w = fmtPop.offsetWidth, h = fmtPop.offsetHeight;
+  let left = rect.right - w;
+  let top = rect.bottom + 6;
+  if(top + h > window.innerHeight - 8) top = rect.top - h - 6;
+  fmtPop.style.left = Math.max(8, left) + 'px';
+  fmtPop.style.top = top + 'px';
+}
+function closeFmtPop(){ fmtPop.classList.remove('show'); fmtRowId = null; }
+fmtPop.addEventListener('click', e => {
+  const b = e.target.closest('[data-fmt]');
+  if(b && fmtRowId) doDownload(fmtRowId, b.dataset.fmt);
+});
+document.addEventListener('click', e => {
+  if(!e.target.closest('#fmtPop') && !e.target.closest('[data-caret]')) closeFmtPop();
+});
+
+/* ============ 作废 ============ */
+const voidModal = document.getElementById('voidModal');
+let voidId = null;
+function openVoid(id){
+  voidId = id;
+  const r = rows.find(x => x.id === id);
+  document.getElementById('voidInfo').innerHTML =
+    '<div><span class="k">发票票号</span>' + (r.no || '—') + '</div>' +
+    '<div><span class="k">抬头</span>' + r.title + '</div>' +
+    '<div><span class="k">开票金额</span><b>' + money(r.amount) + '</b></div>' +
+    '<div><span class="k">开票方式</span>自助申请（支持自助作废）</div>';
+  voidModal.classList.add('show');
+}
+document.getElementById('voidCancel').onclick = () => voidModal.classList.remove('show');
+document.getElementById('voidConfirm').onclick = () => {
+  const r = rows.find(x => x.id === voidId);
+  if(r) r.status = 'voided';
+  voidModal.classList.remove('show');
+  renderTable();
+  toast('发票已作废，' + money(r.amount) + ' 已退回可开票额度');
+};
+
+/* ============ 申请抽屉 ============ */
+const mask = document.getElementById('mask');
+const drawer = document.getElementById('drawer');
+let cert = 'personal';
+
+function openDrawer(){ mask.classList.add('show'); drawer.classList.add('show'); }
+function closeDrawer(){ mask.classList.remove('show'); drawer.classList.remove('show'); }
+document.getElementById('openApply').onclick = openDrawer;
+document.getElementById('closeDrawer').onclick = closeDrawer;
+mask.onclick = closeDrawer;
+
+/* 身份切换（顶栏 + 抽屉内，双向同步） */
+function setCert(next){
+  cert = next;
+  document.querySelectorAll('#certSeg button, #certSeg2 button').forEach(x => {
+    x.classList.toggle('on', x.dataset.cert === cert);
+  });
+  applyCert();
+  evaluate();
+}
+document.getElementById('certSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  setCert(b.dataset.cert);
+});
+document.getElementById('certSeg2').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  setCert(b.dataset.cert);
+});
+
+function applyCert(){
+  const personal = cert === 'personal';
+  document.getElementById('personalTitle').style.display = personal ? '' : 'none';
+  document.getElementById('companyTitle').style.display = personal ? 'none' : '';
+  document.getElementById('titleTag').textContent = personal ? '个人认证' : '企业认证';
+  document.getElementById('availTxt').textContent = AVAILABLE.toLocaleString('zh-CN',{minimumFractionDigits:2});
+}
+
+/* 金额输入 */
+const amountEl = document.getElementById('amount');
+amountEl.addEventListener('input', () => { amountEl.value = fmtInput(amountEl.value); evaluate(); });
+document.getElementById('chips').addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if(!c) return;
+  amountEl.value = c.dataset.v; evaluate();
+});
+document.getElementById('subItem').addEventListener('change', e => {
+  toast('已切换子项目：' + e.target.options[e.target.selectedIndex].text);
+});
+document.getElementById('invType').addEventListener('change', evaluate);
+
+/* 接收方式 */
+document.getElementById('cbMail').onclick = function(){
+  this.classList.toggle('on');
+  document.getElementById('mailInput').style.display = this.classList.contains('on') ? 'none' : '';
+};
+document.getElementById('cbSms').onclick = function(){
+  this.classList.toggle('on');
+  document.getElementById('smsInput').style.display = this.classList.contains('on') ? 'none' : '';
+};
+
+/* 备注计数 */
+const remarkEl = document.getElementById('remark');
+remarkEl.addEventListener('input', () => {
+  document.getElementById('remarkCount').textContent = remarkEl.value.length;
+});
+
+/* 规则引擎 */
+let mode = 'self';
+let prevBlock = null;
+function evaluate(){
+  const amt = num(amountEl.value);
+  const type = document.getElementById('invType').value;
+
+  const amtErr = document.getElementById('amtErr');
+  const amtErrTxt = document.getElementById('amtErrTxt');
+  let amountInvalid = false;
+
+  if(amt <= 0){ amountInvalid = true; amtErrTxt.textContent = '请输入大于 0 的开票金额。'; }
+  else if(amt > AVAILABLE){ amountInvalid = true; amtErrTxt.textContent = '开票金额超出可开票金额（' + money(AVAILABLE) + '），请调整金额或先充值消费。'; }
+  amtErr.style.display = amountInvalid ? 'flex' : 'none';
+
+  const specialBlock = document.getElementById('specialBlock');
+  const limitBlock = document.getElementById('limitBlock');
+  const submitBtn = document.getElementById('submitBtn');
+  const footNote = document.getElementById('footNote');
+
+  specialBlock.style.display = 'none';
+  limitBlock.style.display = 'none';
+
+  const scrollToBlock = el => {
+    if(prevBlock === el) return;
+    prevBlock = el;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ block:'nearest', behavior:'smooth' });
+    });
+  };
+
+  /* 专票：个人认证 → 表单申请；企业认证 → 沿用现状（表单申请） */
+  if(type === 'special'){
+    mode = 'form';
+    specialBlock.style.display = 'flex';
+    document.getElementById('specialBlockTxt').innerHTML =
+      (cert === 'personal'
+        ? '个人认证主体<b>无法自助开具增值税专用发票</b>。'
+        : '增值税专用发票<b>暂不支持自助开具</b>。') +
+      '请通过<a class="goForm">特殊开票申请表</a>提交申请，由财务审核后人工开具。';
+    submitBtn.textContent = '前往表单申请';
+    submitBtn.disabled = false;
+    footNote.innerHTML = '将跳转至「特殊开票申请」表单，由财务人工审核开具。';
+    scrollToBlock(specialBlock);
+    return;
+  }
+
+  /* 普票 > 5000 → 特殊开票申请（人工） */
+  if(amt > 5000){
+    mode = 'specialApply';
+    limitBlock.style.display = 'flex';
+    submitBtn.textContent = '提交特殊开票申请';
+    submitBtn.disabled = amountInvalid;
+    footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
+    scrollToBlock(limitBlock);
+    return;
+  }
+
+  /* 自助开票 */
+  mode = 'self';
+  prevBlock = null;
+  submitBtn.textContent = '申请发票';
+  submitBtn.disabled = amountInvalid;
+  footNote.innerHTML = '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
+}
+
+document.getElementById('drawer').addEventListener('click', e => {
+  const a = e.target.closest('.goForm');
+  if(a){
+    e.preventDefault();
+    toast('跳转「特殊开票申请表」');
+  }
+});
+
+/* 提交 */
+document.getElementById('submitBtn').onclick = () => {
+  const amt = num(amountEl.value);
+  if(mode === 'form'){ toast('跳转「特殊开票申请表」'); return; }
+  if(mode === 'specialApply'){ toast('特殊开票申请已提交，等待财务审核'); closeDrawer(); return; }
+
+  const sub = document.getElementById('subItem');
+  const subTxt = sub.options[sub.selectedIndex].text;
+  const type = document.getElementById('invType').value === 'special' ? '增值税专用发票' : '增值税普通发票';
+  const title = cert === 'personal'
+    ? (document.getElementById('titleName').value || '未填写抬头')
+    : document.getElementById('companyName').textContent;
+
+  const newRow = {
+    id: 'RD' + Math.random().toString(36).slice(2, 10),
+    apply: '2026-11-23 17:09',
+    issue: null,
+    title: title,
+    tax: cert === 'personal' ? (document.getElementById('titleTax').value || '—') : '91330106MA2H8X3K7P',
+    type: type,
+    no: null,
+    amount: amt,
+    source: 'self',
+    status: 'issuing',
+    sub: subTxt,
+    remark: remarkEl.value
+  };
+  rows.unshift(newRow);
+  renderTable();
+  closeDrawer();
+  const tail = newRow.remark ? '，备注已透传"' + newRow.remark.slice(0,12) + (newRow.remark.length>12?'…':'') + '"' : '';
+  toast('已提交自助开票 · ' + subTxt + ' · ' + money(amt) + tail);
+};
+
+/* ============ toast ============ */
+function toast(msg){
+  const box = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = '<span class="dot"></span>' + msg;
+  box.appendChild(el);
+  setTimeout(() => { el.style.transition = '.25s'; el.style.opacity = '0'; el.style.transform = 'translateY(6px)'; }, 2400);
+  setTimeout(() => el.remove(), 2750);
+}
+
+/* 初始化 */
+renderTable();
+applyCert();
+evaluate();
+</script>
+</body>
+</html>
