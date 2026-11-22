@@ -480,9 +480,8 @@
 
     <div class="field">
       <label class="lbl"><span class="req">*</span>开票金额</label>
-      <input class="input" id="amount" type="text" value="0.42" inputmode="decimal" />
+      <input class="input" id="amount" type="text" value="3000" inputmode="decimal" />
       <div class="chips" id="chips">
-        <button class="chip" data-v="0.42">0.42</button>
         <button class="chip" data-v="4999">4,999</button>
         <button class="chip" data-v="5000">5,000</button>
         <button class="chip" data-v="5001">5,001</button>
@@ -503,54 +502,25 @@
           <option value="cloud">云服务(siliconflow.cn)</option>
         </select>
       </div>
-      <div class="tipline info">
-        <span class="ti">i</span>
-        <span>自定义子项目名称已包含站点标识，将随发票明细一起开具，默认选中「模型API调用(siliconflow.cn)」。</span>
-      </div>
     </div>
 
     <div class="section-title"><b>开票信息</b></div>
 
-    <div class="demo demo-inline">
-      <span class="demo-label">演示身份</span>
-      <div class="seg" id="certSeg2">
-        <button class="on" data-cert="personal">个人认证</button>
-        <button data-cert="company">企业认证</button>
-      </div>
-      <span style="font-size:11px;color:#A9A5B8;margin-left:auto">切换以演示规则差异</span>
-    </div>
-
     <div class="field">
-      <label class="lbl"><span class="req">*</span>抬头名称和税号 <span id="titleTag" class="opt">个人认证</span></label>
+      <label class="lbl"><span class="req">*</span>发票抬头</label>
 
-      <!-- 个人认证：抬头类型二选一（企业抬头为本次新增能力） -->
+      <!-- 个人认证：从已有抬头中选择 -->
       <div id="personalTitle">
-        <div class="seg seg-block" id="titleSeg">
-          <button class="on" data-kind="enterprise">企业抬头<span class="nb">本次新增</span></button>
-          <button data-kind="personal">个人抬头<span class="nb nb-gray">现状</span></button>
-        </div>
+        <select class="input" id="titleSelect"></select>
 
-        <!-- 企业抬头：用户自填对方企业信息 -->
-        <div id="titleEnterprise" style="margin-top:10px">
-          <input class="input" id="entName" placeholder="请输入企业抬头名称（完整工商名称）" value="杭州云枢科技有限公司" style="margin-bottom:8px" />
-          <input class="input" id="entTax" placeholder="请输入纳税人识别号（必填）" value="91330106MA2H8X3K7P" />
-          <div class="tipline ok" id="entHint">
-            <span class="ti">✓</span>
-            <span id="entHintTxt">个人认证可为企业开具<b>增值税普通发票</b>，单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>。</span>
-          </div>
+        <!-- 自定义：展开输入 -->
+        <div id="titleCustom" style="display:none;margin-top:8px">
+          <input class="input" id="entName" placeholder="企业名称（完整工商名称）" style="margin-bottom:8px" />
+          <input class="input" id="entTax" placeholder="纳税人识别号" />
         </div>
-
-        <!-- 个人抬头：现状能力 -->
-        <div id="titlePersonal" style="display:none;margin-top:10px">
-          <div class="lockbar">
-            <span class="lock">🔒</span>
-            <span>吕青华</span>
-            <span class="sub">实名认证姓名</span>
-          </div>
-          <div class="tipline info">
-            <span class="ti">i</span>
-            <span>个人抬头沿用现有规则，本次需求未调整。</span>
-          </div>
+        <div class="tipline warn" id="limitBlock" style="display:none">
+          <span class="ti">!</span>
+          <span id="limitBlockTxt"></span>
         </div>
       </div>
 
@@ -560,10 +530,6 @@
           <span class="lock">🔒</span>
           <span id="companyName">杭州云枢科技有限公司</span>
           <span class="sub">已认证</span>
-        </div>
-        <div class="tipline info">
-          <span class="ti">i</span>
-          <span>企业认证账号仅可开具<b>已认证企业</b>的发票，抬头与税号不可修改。如需变更认证主体，请前往「实名认证」。</span>
         </div>
       </div>
     </div>
@@ -578,10 +544,6 @@
         <span class="ti">!</span>
         <span id="specialBlockTxt"></span>
       </div>
-      <div class="tipline warn" id="limitBlock" style="display:none">
-        <span class="ti">!</span>
-        <span id="limitBlockTxt"></span>
-      </div>
     </div>
 
     <div class="section-title"><b>发票接收</b></div>
@@ -590,7 +552,7 @@
       <div class="cbox on" id="cbMail"></div>
       <div class="recv-main">
         <div class="cap">邮箱接收</div>
-        <div class="def">默认使用 绑定邮箱 <b>lqh@example.com</b> 接收发票，如需使用其他邮箱请认真核对</div>
+        <div class="def">默认 <b>lqh@example.com</b></div>
         <input class="input" id="mailInput" placeholder="请输入接收邮箱" style="display:none" />
       </div>
     </div>
@@ -598,7 +560,7 @@
       <div class="cbox" id="cbSms"></div>
       <div class="recv-main">
         <div class="cap">短信接收</div>
-        <div class="def">默认使用 绑定手机 <b>138****6688</b> 接收发票，如需使用其他手机请认真核对</div>
+        <div class="def">默认 <b>138****6688</b></div>
         <input class="input" id="smsInput" placeholder="请输入接收手机号" style="display:none" />
       </div>
     </div>
@@ -606,12 +568,8 @@
     <div class="section-title"><b>发票备注</b></div>
     <div class="field">
       <label class="lbl">发票备注 <span class="opt">选填</span></label>
-      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明等，将自动写入发票备注栏"></textarea>
+      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明，将写入发票备注栏"></textarea>
       <div class="counter"><span id="remarkCount">0</span>/200</div>
-      <div class="tipline info">
-        <span class="ti">i</span>
-        <span>此处填写内容将<b>原样透传</b>至发票备注栏，开票后不可修改，请确认无误。</span>
-      </div>
     </div>
   </div>
 
@@ -808,16 +766,34 @@ const mask = document.getElementById('mask');
 const drawer = document.getElementById('drawer');
 let cert = 'personal';
 
-function openDrawer(){ mask.classList.add('show'); drawer.classList.add('show'); }
+function openDrawer(){
+  resetDrawer();
+  mask.classList.add('show'); drawer.classList.add('show');
+}
+function resetDrawer(){
+  titleVal = 'personal';
+  document.getElementById('entName').value = '';
+  document.getElementById('entTax').value = '';
+  document.getElementById('titleCustom').style.display = 'none';
+  document.getElementById('amount').value = '3000';
+  document.getElementById('remark').value = '';
+  document.getElementById('remarkCount').textContent = '0';
+  document.getElementById('invType').value = 'normal';
+  ['amtErr','specialBlock','limitBlock'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  buildTitleOptions(3000);
+  evaluate();
+}
 function closeDrawer(){ mask.classList.remove('show'); drawer.classList.remove('show'); }
 document.getElementById('openApply').onclick = openDrawer;
 document.getElementById('closeDrawer').onclick = closeDrawer;
 mask.onclick = closeDrawer;
 
-/* 身份切换（顶栏 + 抽屉内，双向同步） */
+/* 身份切换（顶栏） */
 function setCert(next){
   cert = next;
-  document.querySelectorAll('#certSeg button, #certSeg2 button').forEach(x => {
+  document.querySelectorAll('#certSeg button').forEach(x => {
     x.classList.toggle('on', x.dataset.cert === cert);
   });
   applyCert();
@@ -827,30 +803,76 @@ document.getElementById('certSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if(!b) return;
   setCert(b.dataset.cert);
 });
-document.getElementById('certSeg2').addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  setCert(b.dataset.cert);
-});
 
-/* 抬头类型：企业抬头（本次新增）/ 个人抬头（现状） */
-let titleKind = 'enterprise';
-document.getElementById('titleSeg').addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  titleKind = b.dataset.kind;
-  document.querySelectorAll('#titleSeg button').forEach(x => {
-    x.classList.toggle('on', x.dataset.kind === titleKind);
-  });
-  document.getElementById('titleEnterprise').style.display = titleKind === 'enterprise' ? '' : 'none';
-  document.getElementById('titlePersonal').style.display = titleKind === 'personal' ? '' : 'none';
+/* ===== 抬头选择：个人 / 历史开票抬头 / 自定义 ===== */
+const PERSONAL_TITLE = { name:'吕青华（个人抬头）', tax:'—', kind:'personal' };
+/* 过去成功开票过的企业抬头 */
+const HISTORY_TITLES = [
+  { name:'杭州云枢科技有限公司',      tax:'91330106MA2H8X3K7P', kind:'history' },
+  { name:'北京智算信息技术有限公司',  tax:'91110108MA01T9XK4M', kind:'history' },
+  { name:'上海码上智能科技有限公司',  tax:'91310115MA1K4Q3L2N', kind:'history' }
+];
+const CUSTOM_OPT = '__custom__';
+
+let titleVal = 'personal';
+
+function buildTitleOptions(amt){
+  const sel = document.getElementById('titleSelect');
+  const over = amt > 5000;
+  sel.innerHTML = '';
+
+  /* 个人抬头始终可用 */
+  const o1 = new Option('个人抬头 · 吕青华', 'personal');
+  sel.appendChild(o1);
+
+  /* 历史企业抬头：仅金额 ≤ 5000 可选 */
+  if(!over){
+    const grp = document.createElement('optgroup');
+    grp.label = '历史开票抬头';
+    HISTORY_TITLES.forEach(t => {
+      grp.appendChild(new Option(t.name + '  ' + t.tax, 'h:' + t.tax));
+    });
+    sel.appendChild(grp);
+  }
+
+  /* 自定义：仅金额 ≤ 5000 可选 */
+  if(!over){
+    sel.appendChild(new Option('自定义企业抬头…', CUSTOM_OPT));
+  }
+
+  /* 恢复选择（超限时强制回到个人） */
+  const valid = over
+    ? ['personal']
+    : ['personal', CUSTOM_OPT, ...HISTORY_TITLES.map(t => 'h:' + t.tax)];
+  if(!valid.includes(titleVal)) titleVal = 'personal';
+  sel.value = titleVal;
+}
+
+document.getElementById('titleSelect').addEventListener('change', e => {
+  titleVal = e.target.value;
+  document.getElementById('titleCustom').style.display = titleVal === CUSTOM_OPT ? '' : 'none';
   evaluate();
 });
+
+function currentTitle(){
+  if(titleVal === 'personal') return PERSONAL_TITLE;
+  if(titleVal === CUSTOM_OPT){
+    return {
+      name: document.getElementById('entName').value.trim() || '未填写企业抬头',
+      tax:  document.getElementById('entTax').value.trim() || '—',
+      kind: 'custom'
+    };
+  }
+  const hit = HISTORY_TITLES.find(t => 'h:' + t.tax === titleVal);
+  return hit ? { ...hit, kind:'history' } : PERSONAL_TITLE;
+}
 
 function applyCert(){
   const personal = cert === 'personal';
   document.getElementById('personalTitle').style.display = personal ? '' : 'none';
   document.getElementById('companyTitle').style.display = personal ? 'none' : '';
-  document.getElementById('titleTag').textContent = personal ? '个人认证' : '企业认证';
   document.getElementById('availTxt').textContent = AVAILABLE.toLocaleString('zh-CN',{minimumFractionDigits:2});
+  if(personal) buildTitleOptions(num(amountEl.value));
 }
 
 /* 金额输入 */
@@ -899,19 +921,17 @@ function evaluate(){
   else if(amt > AVAILABLE){ amountInvalid = true; amtErrTxt.textContent = '开票金额超出可开票金额（' + money(AVAILABLE) + '），请调整金额或先充值消费。'; }
   amtErr.style.display = amountInvalid ? 'flex' : 'none';
 
-  /* 抬头/税号必填校验（仅个人认证 + 企业抬头） */
+  /* 抬头选项随金额联动；超限时强制个人抬头 */
+  if(cert === 'personal') buildTitleOptions(amt);
+  const t = currentTitle();
+
+  /* 自定义抬头必填校验 */
   let titleInvalid = false;
-  if(cert === 'personal' && titleKind === 'enterprise'){
+  if(cert === 'personal' && titleVal === CUSTOM_OPT){
     const en = document.getElementById('entName').value.trim();
     const et = document.getElementById('entTax').value.trim();
     titleInvalid = !en || !et;
   }
-  const entHint = document.getElementById('entHint');
-  entHint.style.display =
-    (cert === 'personal' && titleKind === 'enterprise' && titleInvalid) ? 'none' : 'flex';
-  document.getElementById('entHintTxt').innerHTML = amt > 5000
-    ? '个人认证可为企业开具<b>增值税普通发票</b>；当前金额已超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。'
-    : '个人认证可为企业开具<b>增值税普通发票</b>，单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>。';
 
   const specialBlock = document.getElementById('specialBlock');
   const limitBlock = document.getElementById('limitBlock');
@@ -945,16 +965,15 @@ function evaluate(){
     return;
   }
 
-  /* 普票 > 5000 → 特殊开票申请（人工） */
+  /* 普票 > 5000 → 特殊开票申请（人工），抬头仅可选个人 */
   if(amt > 5000){
     mode = 'specialApply';
     limitBlock.style.display = 'flex';
     const over = money(amt - 5000);
     document.getElementById('limitBlockTxt').innerHTML =
-      (cert === 'personal' && titleKind === 'enterprise'
-        ? '个人认证开具<b>企业抬头普票</b>的单张上限为 <b>¥5,000</b>，当前超出 <b>' + over + '</b>。'
-        : '单张金额超过 <b>¥5,000</b>，超出线上自助开票限额。') +
-      '超出部分需提交<b>特殊开票申请</b>，经财务审核后人工开具；也可拆分为多张（每张 ≤ ¥5,000）自助开具。';
+      (cert === 'personal'
+        ? '单张超过 <b>¥5,000</b>，仅支持<b>个人抬头</b>。超出 ' + over + ' 需提交特殊开票申请，经财务审核后人工开具。'
+        : '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。');
     submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
     footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
@@ -969,7 +988,7 @@ function evaluate(){
 
   submitBtn.disabled = amountInvalid || titleInvalid;
   footNote.innerHTML = titleInvalid
-    ? '<span style="color:#E5484D">请填写完整的企业抬头名称与纳税人识别号</span>'
+    ? '<span style="color:#E5484D">请填写完整的企业名称与纳税人识别号</span>'
     : '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
 }
 
@@ -993,13 +1012,9 @@ document.getElementById('submitBtn').onclick = () => {
 
   let title, taxNo;
   if(cert === 'personal'){
-    if(titleKind === 'enterprise'){
-      title = document.getElementById('entName').value.trim() || '未填写企业抬头';
-      taxNo = document.getElementById('entTax').value.trim() || '—';
-    }else{
-      title = '吕青华（个人抬头）';
-      taxNo = '—';
-    }
+    const t = currentTitle();
+    title = t.name;
+    taxNo = t.tax;
   }else{
     title = document.getElementById('companyName').textContent;
     taxNo = '91330106MA2H8X3K7P';
