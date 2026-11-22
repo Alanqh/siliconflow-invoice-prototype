@@ -182,9 +182,9 @@
   .tag-voided{background:#F2F1F5;color:#8B879A;text-decoration:line-through;}
   .tag-special{background:#EEF3FF;color:#2F5FD0;}
   tbody tr.is-voided td:not(:last-child){color:#A9A6B6;}
-  .row-actions{display:flex;align-items:center;gap:4px;}
+  .row-actions{display:flex;align-items:center;gap:5px;white-space:nowrap;}
   .dl-group{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;}
-  .dl-group button{padding:5px 9px;font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:5px;}
+  .dl-group button{padding:5px 9px;font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
   .dl-group button:hover{background:#F6F4FE;color:var(--brand-deep);}
   .dl-group .caret{border-left:1px solid var(--line);padding:5px 6px;}
   .dl-group button:disabled{color:#C2BFCD;cursor:not-allowed;background:#fff;}
@@ -192,6 +192,29 @@
   .txt-btn:hover{background:#F6F4FE;color:var(--brand-deep);}
   .txt-btn.danger:hover{background:var(--red-soft);color:var(--red);}
   .txt-btn:disabled{color:#C9C6D3;cursor:not-allowed;background:none;}
+
+  /* 置灰作废按钮的提示容器（disabled 按钮不触发事件，需外层承接 hover） */
+  .void-disabled{display:inline-flex;position:relative;cursor:not-allowed;}
+  .void-disabled button{pointer-events:none;}
+
+  /* 自定义 tooltip */
+  .tip-hover{position:relative;}
+  .tip-hover::after{
+    content:attr(data-tip);
+    position:absolute;bottom:calc(100% + 7px);right:0;
+    background:#241E38;color:#fff;font-size:11.5px;line-height:1.5;
+    padding:7px 10px;border-radius:7px;white-space:nowrap;
+    opacity:0;pointer-events:none;transform:translateY(3px);
+    transition:opacity .16s,transform .16s;
+    box-shadow:0 6px 18px rgba(20,14,45,.28);z-index:50;
+  }
+  .tip-hover::before{
+    content:"";position:absolute;bottom:calc(100% + 2px);right:12px;
+    border:5px solid transparent;border-top-color:#241E38;
+    opacity:0;pointer-events:none;transition:opacity .16s;z-index:50;
+  }
+  .tip-hover:hover::after{opacity:1;transform:translateY(0);}
+  .tip-hover:hover::before{opacity:1;}
 
   /* ---------- 抽屉 ---------- */
   .mask{
@@ -408,6 +431,13 @@
       <span class="sub">自助开票改版原型</span>
       <div class="topbar-right">
         <div class="demo">
+          <span class="demo-label">操作时段</span>
+          <div class="seg" id="hoursSeg">
+            <button class="on" data-hours="in">10:00–19:00</button>
+            <button data-hours="out">非操作时段</button>
+          </div>
+        </div>
+        <div class="demo">
           <span class="demo-label">演示身份</span>
           <div class="seg" id="certSeg">
             <button class="on" data-cert="personal">个人认证</button>
@@ -427,7 +457,7 @@
       </div>
 
       <div class="toolbar">
-        <button class="btn btn-primary" id="openApply"><span style="font-size:13px">📄</span>申请发票</button>
+        <span id="openApplyWrap"><button class="btn btn-primary" id="openApply"><span style="font-size:13px">📄</span>申请发票</button></span>
       </div>
 
       <div class="panel">
@@ -448,7 +478,7 @@
                 <th style="text-align:right">开票金额</th>
                 <th>开票方式</th>
                 <th>状态</th>
-                <th style="width:150px">操作</th>
+                <th style="width:170px">操作</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -655,14 +685,41 @@ const num = s => { const v = parseFloat(String(s).replace(/,/g,'')); return isNa
 
 const STATUS_TXT = { issued:'已开票', issuing:'开票中', voided:'已作废' };
 
+/* ===== 操作时段校验：工作日 10:00–19:00 ===== */
+const HOUR_START = 10, HOUR_END = 19;
+let demoOutOfHours = false;   /* 原型演示用：强制模拟非操作时段 */
+
+function inBusinessHours(){
+  if(demoOutOfHours) return false;
+  const now = new Date();
+  const day = now.getDay();            /* 0=周日, 6=周六 */
+  if(day === 0 || day === 6) return false;
+  const h = now.getHours() + now.getMinutes()/60;
+  return h >= HOUR_START && h < HOUR_END;
+}
+const OUT_HOURS_TIP = '当前不在操作时段（工作日 10:00–19:00），' ;
+
 /* ============ 表格渲染 ============ */
 function renderTable(){
   const tb = document.getElementById('tbody');
   const list = rows;
+  const open = inBusinessHours();
+
   tb.innerHTML = list.map(r => {
     const canDownload = r.status === 'issued';
-    const canVoid = r.status === 'issued' && r.source === 'self';
-    const voidTip = r.source === 'manual' ? '人工开具的发票不支持自助作废，请联系财务' : (r.status === 'voided' ? '该发票已作废' : (r.status === 'issuing' ? '开票中暂不可作废' : ''));
+    /* 仅自助申请 + 已开票 才出现作废按钮 */
+    const showVoid = r.status === 'issued' && r.source === 'self';
+
+    let voidHtml = '';
+    if(showVoid){
+      if(open){
+        voidHtml = `<button class="txt-btn danger" data-void="${r.id}">作废</button>`;
+      }else{
+        voidHtml = `<span class="void-disabled tip-hover" data-tip="${OUT_HOURS_TIP}暂不可作废">
+            <button class="txt-btn" disabled>作废</button>
+          </span>`;
+      }
+    }
 
     return `
     <tr class="${r.status === 'voided' ? 'is-voided' : ''}">
@@ -684,12 +741,25 @@ function renderTable(){
             <button ${canDownload ? '' : 'disabled'} data-dl="${r.id}" data-fmt="zip" title="${canDownload ? '默认打包下载 PDF + OFD + XML' : '当前状态不可下载'}">下载</button>
             <button class="caret" ${canDownload ? '' : 'disabled'} data-caret="${r.id}" title="选择其他格式">▾</button>
           </div>
-          <button class="txt-btn ${canVoid ? 'danger' : ''}" ${canVoid ? '' : 'disabled'} data-void="${r.id}" title="${voidTip}">作废</button>
+          ${voidHtml}
         </div>
       </td>
     </tr>`;
   }).join('');
   document.getElementById('rowCount').textContent = '共 ' + list.length + ' 条';
+
+  /* 申请按钮同步时段状态 */
+  const applyBtn = document.getElementById('openApply');
+  const applyWrap = document.getElementById('openApplyWrap');
+  if(open){
+    applyBtn.disabled = false;
+    applyWrap.classList.remove('tip-hover');
+    applyWrap.removeAttribute('data-tip');
+  }else{
+    applyBtn.disabled = true;
+    applyWrap.classList.add('tip-hover');
+    applyWrap.setAttribute('data-tip', OUT_HOURS_TIP + '暂不可提交申请');
+  }
 }
 
 /* ============ 交互：复制 / 下载 ============ */
@@ -801,6 +871,17 @@ function setCert(next){
 document.getElementById('certSeg').addEventListener('click', e => {
   const b = e.target.closest('button'); if(!b) return;
   setCert(b.dataset.cert);
+});
+
+/* 操作时段演示切换 */
+document.getElementById('hoursSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  demoOutOfHours = b.dataset.hours === 'out';
+  document.querySelectorAll('#hoursSeg button').forEach(x => {
+    x.classList.toggle('on', x.dataset.hours === b.dataset.hours);
+  });
+  renderTable();
+  evaluate();
 });
 
 /* ===== 抬头选择：个人 / 历史开票抬头 / 自定义 ===== */
@@ -993,10 +1074,13 @@ function evaluate(){
   prevBlock = null;
   submitBtn.textContent = '申请发票';
 
-  submitBtn.disabled = amountInvalid || titleInvalid;
-  footNote.innerHTML = titleInvalid
-    ? '<span style="color:#E5484D">请填写完整的企业名称与纳税人识别号</span>'
-    : '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
+  const closed = !inBusinessHours();
+  submitBtn.disabled = amountInvalid || titleInvalid || closed;
+  footNote.innerHTML = closed
+    ? '<span style="color:#E5484D">当前不在操作时段（工作日 10:00–19:00），暂不可提交</span>'
+    : titleInvalid
+      ? '<span style="color:#E5484D">请填写完整的企业名称与纳税人识别号</span>'
+      : '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
 }
 
 document.getElementById('drawer').addEventListener('click', e => {
