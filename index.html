@@ -153,11 +153,6 @@
   .btn-danger:hover{background:#CE3A3F;}
   .btn-sm{padding:5px 10px;font-size:12px;border-radius:7px;}
 
-  .filters{margin-left:auto;display:flex;gap:2px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:3px;}
-  .filters button{font-size:12px;padding:5px 11px;border-radius:6px;color:var(--text-2);}
-  .filters button.on{background:var(--brand-soft);color:var(--brand-deep);font-weight:600;}
-  .filters button small{opacity:.6;margin-left:3px;font-size:10.5px;}
-
   /* ---------- 表格 ---------- */
   .panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
   .panel-head{display:flex;align-items:center;gap:8px;padding:14px 18px 12px;}
@@ -199,7 +194,6 @@
   .txt-btn:hover{background:#F6F4FE;color:var(--brand-deep);}
   .txt-btn.danger:hover{background:var(--red-soft);color:var(--red);}
   .txt-btn:disabled{color:#C9C6D3;cursor:not-allowed;background:none;}
-  .hint-inline{font-size:11.5px;color:var(--text-3);}
 
   /* ---------- 抽屉 ---------- */
   .mask{
@@ -436,13 +430,6 @@
 
       <div class="toolbar">
         <button class="btn btn-primary" id="openApply"><span style="font-size:13px">📄</span>申请发票</button>
-        <span class="hint-inline">个人认证与企业认证均可在线上自助申请，规则差异见弹窗内提示</span>
-        <div class="filters" id="filters">
-          <button class="on" data-f="all">全部 <small>7</small></button>
-          <button data-f="issued">已开票 <small>5</small></button>
-          <button data-f="issuing">开票中 <small>1</small></button>
-          <button data-f="voided">已作废 <small>1</small></button>
-        </div>
       </div>
 
       <div class="panel">
@@ -683,11 +670,9 @@ const num = s => { const v = parseFloat(String(s).replace(/,/g,'')); return isNa
 const STATUS_TXT = { issued:'已开票', issuing:'开票中', voided:'已作废' };
 
 /* ============ 表格渲染 ============ */
-let filter = 'all';
-
 function renderTable(){
   const tb = document.getElementById('tbody');
-  const list = rows.filter(r => filter === 'all' || r.status === filter);
+  const list = rows;
   tb.innerHTML = list.map(r => {
     const canDownload = r.status === 'issued';
     const canVoid = r.status === 'issued' && r.source === 'self';
@@ -721,13 +706,7 @@ function renderTable(){
   document.getElementById('rowCount').textContent = '共 ' + list.length + ' 条';
 }
 
-/* ============ 交互：筛选 / 复制 / 下载 ============ */
-document.getElementById('filters').addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  document.querySelectorAll('#filters button').forEach(x => x.classList.remove('on'));
-  b.classList.add('on'); filter = b.dataset.f; renderTable();
-});
-
+/* ============ 交互：复制 / 下载 ============ */
 document.getElementById('tbody').addEventListener('click', e => {
   const copy = e.target.closest('[data-copy]');
   if(copy){ navigator.clipboard?.writeText(copy.dataset.copy); toast('已复制申请记录 ID'); return; }
