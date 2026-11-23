@@ -348,7 +348,11 @@
     background:#F7F6FC;border-radius:7px;padding:7px 9px;
   }
   .recv-hint b{color:var(--text-2);font-weight:600;}
-  .recv-hint a{color:var(--brand);text-decoration:none;border-bottom:1px dashed var(--brand-line);cursor:pointer;}
+  .recv-hint a{
+    color:var(--brand);font-weight:600;text-decoration:underline;
+    text-decoration-style:dashed;text-underline-offset:2px;cursor:pointer;
+  }
+  .recv-hint a:hover{color:var(--brand-deep);text-decoration-style:solid;}
 
   textarea.input{resize:vertical;min-height:64px;line-height:1.6;}
   .counter{text-align:right;font-size:11px;color:var(--text-3);margin-top:4px;}
@@ -628,7 +632,9 @@
       <div class="cbox on" id="cbMail"></div>
       <div class="recv-main">
         <div class="cap">邮箱接收</div>
-        <div class="recv-hint">默认使用绑定邮箱 <b>lqh@example.com</b>（<a class="goForm" id="profileLink">点击跳转个人主页</a>）接收发票，如需使用其他邮箱请填写在下方输入框内并认真核对。</div>
+        <div class="recv-hint" id="mailHint">
+          默认使用<a class="goForm" id="profileLink">绑定邮箱</a> <b>lqh@example.com</b> 接收发票，如需使用其他邮箱请填写在下方输入框内并认真核对。
+        </div>
         <input class="input" id="mailInput" placeholder="请输入接收邮箱" />
       </div>
     </div>
@@ -636,7 +642,9 @@
       <div class="cbox" id="cbSms"></div>
       <div class="recv-main">
         <div class="cap">短信接收</div>
-        <div class="recv-hint" style="display:none" id="smsHint">默认使用绑定手机号 <b>138****6688</b>（<a class="goForm" id="profileLink2">点击跳转个人主页</a>）接收发票，如需使用其他手机号请填写在下方输入框内并认真核对。</div>
+        <div class="recv-hint" id="smsHint" style="display:none">
+          默认使用<a class="goForm" id="profileLink2">绑定手机号</a> <b>138****6688</b> 接收发票，如需使用其他手机号请填写在下方输入框内并认真核对。
+        </div>
         <input class="input" id="smsInput" placeholder="请输入接收手机号" style="display:none" />
       </div>
     </div>
@@ -864,6 +872,12 @@ function resetDrawer(){
   ['spec','unit','qty'].forEach(id => document.getElementById(id).value = '');
   setMoreOpen(false);
   document.getElementById('invType').value = 'normal';
+  document.getElementById('mailInput').value = '';
+  document.getElementById('smsInput').value = '';
+  /* 接收方式回到默认：勾选邮箱，不勾短信 */
+  document.getElementById('cbMail').classList.add('on');
+  document.getElementById('cbSms').classList.remove('on');
+  syncRecv();
   ['amtErr','specialBlock','limitBlock'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
@@ -996,16 +1010,21 @@ document.getElementById('subItem').addEventListener('change', e => {
   document.getElementById(id).addEventListener('input', () => { renderSplit(); evaluate(); });
 });
 
-/* 接收方式 */
+/* 接收方式：勾选后才展示文案与输入框 */
+function syncRecv(){
+  ['mail','sms'].forEach(k => {
+    const on = document.getElementById(k === 'mail' ? 'cbMail' : 'cbSms').classList.contains('on');
+    document.getElementById(k + 'Input').style.display = on ? '' : 'none';
+    document.getElementById(k + 'Hint').style.display = on ? '' : 'none';
+  });
+}
 document.getElementById('cbMail').onclick = function(){
   this.classList.toggle('on');
-  document.getElementById('mailInput').style.display = this.classList.contains('on') ? '' : 'none';
+  syncRecv();
 };
 document.getElementById('cbSms').onclick = function(){
   this.classList.toggle('on');
-  const on = this.classList.contains('on');
-  document.getElementById('smsInput').style.display = on ? '' : 'none';
-  document.getElementById('smsHint').style.display = on ? '' : 'none';
+  syncRecv();
 };
 
 /* 备注计数 */
