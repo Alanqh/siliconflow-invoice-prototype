@@ -296,20 +296,16 @@
   .section-title b{font-weight:600;color:var(--text-2);font-size:12.5px;letter-spacing:.2px;}
 
   /* ---------- 更多（选填字段折叠） ---------- */
-  .more-toggle{
-    display:flex;align-items:center;gap:6px;width:100%;
-    padding:9px 12px;margin:4px 0 14px;border-radius:9px;
-    background:#FAFAFD;border:1px dashed var(--line);
-    font-size:12.5px;font-weight:500;color:var(--text-2);
-    transition:.15s;cursor:pointer;
+  .more-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:18px 0 10px;
   }
-  .more-toggle:hover{background:var(--brand-soft);border-color:var(--brand-line);color:var(--brand-deep);}
-  .more-toggle .mt-ico{
-    margin-left:auto;font-size:14px;line-height:1;color:var(--text-3);
-    transition:transform .2s;display:inline-block;
+  .more-title{font-size:12.5px;font-weight:600;color:var(--text-2);letter-spacing:.2px;}
+  .more-act{
+    font-size:12px;color:var(--brand);background:none;border:0;padding:2px 4px;
+    cursor:pointer;font-weight:500;border-radius:5px;transition:.15s;
   }
-  .more-toggle.open .mt-ico{transform:rotate(45deg);color:var(--brand);}
-  .more-toggle.open{background:var(--brand-soft);border-style:solid;border-color:var(--brand-line);color:var(--brand-deep);}
+  .more-act:hover{background:var(--brand-soft);color:var(--brand-deep);}
   .more-body{
     padding:12px 12px 2px;margin-bottom:14px;
     background:#FAFAFD;border:1px solid var(--line);border-radius:10px;
@@ -347,6 +343,12 @@
   .recv-main .cap{font-size:12.5px;color:var(--text);margin-bottom:4px;}
   .recv-main .def{font-size:11px;color:var(--text-3);margin-bottom:5px;}
   .recv-main .def b{color:var(--text-2);font-weight:500;}
+  .recv-hint{
+    font-size:11px;color:var(--text-3);line-height:1.7;margin-bottom:6px;
+    background:#F7F6FC;border-radius:7px;padding:7px 9px;
+  }
+  .recv-hint b{color:var(--text-2);font-weight:600;}
+  .recv-hint a{color:var(--brand);text-decoration:none;border-bottom:1px dashed var(--brand-line);cursor:pointer;}
 
   textarea.input{resize:vertical;min-height:64px;line-height:1.6;}
   .counter{text-align:right;font-size:11px;color:var(--text-3);margin-top:4px;}
@@ -476,7 +478,7 @@
         <ol>
           <li>仅<span class="badgeline">已消费金额</span>可以申请开具发票，充值未消费的充值余额不可开具发票；已开票金额不可重复开票，<b>已开票金额不予退款</b>；</li>
           <li><b>自助开票</b>与<b>自助作废</b>均需在工作日 <b>10:00～19:00</b> 操作，通常在提交后 <b>2 个工作日</b>内开具完成；</li>
-          <li><b>个人认证</b>账户若自助开具<span class="badgeline">机构抬头</span>的增值税普通发票，单张金额须<b>小于等于 5000 元</b>；<b>企业认证</b>账户开具发票时只能使用认证信息作为抬头。如有特殊需求，且可以配合提供相应证明材料，请<a class="goForm" id="regLink">点击这里登记</a>。</li>
+          <li><b>企业认证</b>账户开具发票时只能使用<b>企业认证信息</b>作为发票抬头。<b>个人认证</b>账户默认按<span class="badgeline">个人抬头</span>开具发票，如需要按<b>机构抬头</b>开具发票，单张金额 <b>≤ ¥5,000</b> 时可线上自助开具增值税普通发票；如有其他特殊需求，请<a class="goForm" id="regLink">点击这里登记</a>，并配合提供相关资料。</li>
         </ol>
       </div>
 
@@ -552,37 +554,25 @@
     <div class="field">
       <label class="lbl"><span class="req">*</span>发票抬头</label>
 
-      <!-- 个人认证：从已有抬头中选择 -->
-      <div id="personalTitle">
+      <!-- 统一抬头选择：个人认证 / 企业认证共用 -->
+      <div id="titleArea">
         <select class="input" id="titleSelect"></select>
 
-        <!-- 个人 / 历史抬头：名称已在上方选定，下方仅展示税号 -->
+        <!-- 选中某抬头后，下方仅展示税号 -->
         <div class="tax-block" id="taxBlock" style="display:none">
           <span class="split-k">纳税人识别号</span>
           <span class="split-v" id="dispTax">—</span>
         </div>
 
-        <!-- 自定义：展开企业名称与税号两个输入 -->
+        <!-- 仅个人认证 + 选自定义 + 金额 ≤ 5000 时展开 -->
         <div id="titleCustom" style="display:none;margin-top:8px">
-          <input class="input" id="entName" placeholder="企业名称（完整工商名称）" style="margin-bottom:8px" />
+          <input class="input" id="entName" placeholder="机构名称（完整工商名称）" style="margin-bottom:8px" />
           <input class="input" id="entTax" placeholder="纳税人识别号" />
         </div>
+
         <div class="tipline warn" id="limitBlock" style="display:none">
           <span class="ti">!</span>
           <span id="limitBlockTxt"></span>
-        </div>
-      </div>
-
-      <!-- 企业认证：锁定已认证企业 -->
-      <div id="companyTitle" style="display:none">
-        <div class="lockbar">
-          <span class="lock">🔒</span>
-          <span id="companyName">杭州云枢科技有限公司</span>
-          <span class="sub">已认证</span>
-        </div>
-        <div class="tax-block" style="margin-top:8px">
-          <span class="split-k">纳税人识别号</span>
-          <span class="split-v">91330106MA2H8X3K7P</span>
         </div>
       </div>
     </div>
@@ -592,7 +582,7 @@
       <div class="lockbar" id="invTypeFixed">
         <span class="lock">🔒</span>
         <span>增值税普通发票</span>
-        <span class="sub">个人认证仅支持普票</span>
+        <span class="sub" id="invTypeLockTxt">个人认证仅支持普票</span>
       </div>
       <select class="input" id="invType" style="display:none">
         <option value="normal" selected>增值税普通发票</option>
@@ -604,9 +594,10 @@
       </div>
     </div>
 
-    <button class="more-toggle" id="moreToggle" type="button">
-      <span class="mt-txt">更多</span><span class="mt-ico">＋</span>
-    </button>
+    <div class="more-head">
+      <span class="more-title">更多</span>
+      <button class="more-act" id="moreAct" type="button">展开</button>
+    </div>
 
     <div class="more-body" id="moreBody" style="display:none">
       <div class="more-grid">
@@ -637,6 +628,7 @@
       <div class="cbox on" id="cbMail"></div>
       <div class="recv-main">
         <div class="cap">邮箱接收</div>
+        <div class="recv-hint">默认使用绑定邮箱 <b>lqh@example.com</b>（<a class="goForm" id="profileLink">点击跳转个人主页</a>）接收发票，如需使用其他邮箱请填写在下方输入框内并认真核对。</div>
         <input class="input" id="mailInput" placeholder="请输入接收邮箱" />
       </div>
     </div>
@@ -644,6 +636,7 @@
       <div class="cbox" id="cbSms"></div>
       <div class="recv-main">
         <div class="cap">短信接收</div>
+        <div class="recv-hint" style="display:none" id="smsHint">默认使用绑定手机号 <b>138****6688</b>（<a class="goForm" id="profileLink2">点击跳转个人主页</a>）接收发票，如需使用其他手机号请填写在下方输入框内并认真核对。</div>
         <input class="input" id="smsInput" placeholder="请输入接收手机号" style="display:none" />
       </div>
     </div>
@@ -667,15 +660,6 @@
     </div>
     <div class="modal-body">
       <div class="void-info" id="voidInfo"></div>
-      <div class="field" style="margin-top:14px">
-        <label class="lbl">作废原因</label>
-        <select class="input" id="voidReason">
-          <option>开票信息有误（抬头/税号）</option>
-          <option>金额填写错误</option>
-          <option>客户要求重新开具</option>
-          <option>其他原因</option>
-        </select>
-      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-ghost" id="voidCancel">取消</button>
@@ -870,7 +854,7 @@ function openDrawer(){
   mask.classList.add('show'); drawer.classList.add('show');
 }
 function resetDrawer(){
-  titleVal = 'personal';
+  titleVal = cert === 'company' ? 'company' : 'personal';
   document.getElementById('entName').value = '';
   document.getElementById('entTax').value = '';
   document.getElementById('titleCustom').style.display = 'none';
@@ -894,6 +878,8 @@ mask.onclick = closeDrawer;
 /* 身份切换（顶栏） */
 function setCert(next){
   cert = next;
+  /* 切换身份时按该身份的默认抬头重置 */
+  titleVal = cert === 'company' ? 'company' : 'personal';
   document.querySelectorAll('#certSeg button').forEach(x => {
     x.classList.toggle('on', x.dataset.cert === cert);
   });
@@ -928,49 +914,54 @@ const CUSTOM_OPT = '__custom__';
 
 let titleVal = 'personal';
 
+/* ===== 抬头选择 =====
+   个人认证：默认个人抬头；金额 ≤ 5000 时可选历史机构抬头/自定义机构抬头
+             金额 > 5000 时只能个人抬头（无自定义、无历史、无文案提示）
+   企业认证：可选「已认证企业」或「个人抬头」；选个人时发票类型仅普票
+*/
+const COMPANY_TITLE = { name:'杭州云枢科技有限公司', tax:'91330106MA2H8X3K7P', kind:'company' };
+
 function buildTitleOptions(amt){
   const sel = document.getElementById('titleSelect');
   const over = amt > 5000;
+  const personal = cert === 'personal';
   sel.innerHTML = '';
 
-  /* 个人抬头始终可用 */
-  const o1 = new Option('个人抬头 · 吕青华', 'personal');
-  sel.appendChild(o1);
-
-  /* 历史企业抬头：仅金额 ≤ 5000 可选 */
-  if(!over){
-    const grp = document.createElement('optgroup');
-    grp.label = '历史开票抬头';
-    HISTORY_TITLES.forEach(t => {
-      grp.appendChild(new Option(t.name, 'h:' + t.tax));
-    });
-    sel.appendChild(grp);
+  if(personal){
+    /* 个人认证 */
+    sel.appendChild(new Option('个人抬头 · 吕青华', 'personal'));
+    if(!over){
+      const grp = document.createElement('optgroup');
+      grp.label = '历史开票抬头';
+      HISTORY_TITLES.forEach(t => grp.appendChild(new Option(t.name, 'h:' + t.tax)));
+      sel.appendChild(grp);
+      sel.appendChild(new Option('自定义机构抬头…', CUSTOM_OPT));
+    }
+    /* 超限时强制回个人抬头 */
+    const valid = over ? ['personal']
+      : ['personal', CUSTOM_OPT, ...HISTORY_TITLES.map(t => 'h:' + t.tax)];
+    if(!valid.includes(titleVal)) titleVal = 'personal';
+  }else{
+    /* 企业认证 */
+    sel.appendChild(new Option('已认证企业 · ' + COMPANY_TITLE.name, 'company'));
+    sel.appendChild(new Option('个人抬头 · 吕青华', 'personal'));
+    if(titleVal !== 'personal') titleVal = 'company';
   }
 
-  /* 自定义：仅金额 ≤ 5000 可选 */
-  if(!over){
-    sel.appendChild(new Option('自定义企业抬头…', CUSTOM_OPT));
-  }
-
-  /* 恢复选择（超限时强制回到个人） */
-  const valid = over
-    ? ['personal']
-    : ['personal', CUSTOM_OPT, ...HISTORY_TITLES.map(t => 'h:' + t.tax)];
-  if(!valid.includes(titleVal)) titleVal = 'personal';
   sel.value = titleVal;
 }
 
 document.getElementById('titleSelect').addEventListener('change', e => {
   titleVal = e.target.value;
-  document.getElementById('titleCustom').style.display = titleVal === CUSTOM_OPT ? '' : 'none';
   evaluate();
 });
 
 function currentTitle(){
   if(titleVal === 'personal') return PERSONAL_TITLE;
+  if(titleVal === 'company') return COMPANY_TITLE;
   if(titleVal === CUSTOM_OPT){
     return {
-      name: document.getElementById('entName').value.trim() || '未填写企业抬头',
+      name: document.getElementById('entName').value.trim() || '未填写机构抬头',
       tax:  document.getElementById('entTax').value.trim() || '—',
       kind: 'custom'
     };
@@ -979,24 +970,20 @@ function currentTitle(){
   return hit ? { ...hit, kind:'history' } : PERSONAL_TITLE;
 }
 
-/* 抬头名称 / 税号 拆分展示 */
-/* 选择个人/历史抬头时展示税号；自定义时展开两个输入框 */
+/* 选中抬头后，下方展示税号；选自定义时改为展开两个输入框 */
 function renderSplit(){
   const t = currentTitle();
   const custom = titleVal === CUSTOM_OPT;
   document.getElementById('taxBlock').style.display = custom ? 'none' : '';
+  document.getElementById('titleCustom').style.display = custom ? '' : 'none';
   document.getElementById('dispTax').textContent = t.tax;
 }
 
 function applyCert(){
   const personal = cert === 'personal';
-  document.getElementById('personalTitle').style.display = personal ? '' : 'none';
-  document.getElementById('companyTitle').style.display = personal ? 'none' : '';
-  /* 个人认证固定普票，不出现类型下拉 */
-  document.getElementById('invTypeFixed').style.display = personal ? 'flex' : 'none';
-  document.getElementById('invType').style.display = personal ? 'none' : '';
   document.getElementById('availTxt').textContent = AVAILABLE.toLocaleString('zh-CN',{minimumFractionDigits:2});
-  if(personal) buildTitleOptions(num(amountEl.value));
+  buildTitleOptions(num(amountEl.value));
+  evaluate();
 }
 
 /* 金额输入 */
@@ -1016,7 +1003,9 @@ document.getElementById('cbMail').onclick = function(){
 };
 document.getElementById('cbSms').onclick = function(){
   this.classList.toggle('on');
-  document.getElementById('smsInput').style.display = this.classList.contains('on') ? '' : 'none';
+  const on = this.classList.contains('on');
+  document.getElementById('smsInput').style.display = on ? '' : 'none';
+  document.getElementById('smsHint').style.display = on ? '' : 'none';
 };
 
 /* 备注计数 */
@@ -1026,14 +1015,13 @@ remarkEl.addEventListener('input', () => {
 });
 
 /* 「更多」选填字段折叠 */
-const moreToggle = document.getElementById('moreToggle');
+const moreAct = document.getElementById('moreAct');
 const moreBody = document.getElementById('moreBody');
 function setMoreOpen(open){
-  moreToggle.classList.toggle('open', open);
-  moreToggle.querySelector('.mt-txt').textContent = open ? '收起' : '更多';
+  moreAct.textContent = open ? '收起' : '展开';
   moreBody.style.display = open ? '' : 'none';
 }
-moreToggle.onclick = () => setMoreOpen(moreBody.style.display === 'none');
+moreAct.onclick = () => setMoreOpen(moreBody.style.display === 'none');
 
 /* 规则引擎 */
 let mode = 'self';
@@ -1057,6 +1045,19 @@ function evaluate(){
   if(cert === 'personal') buildTitleOptions(amt);
   const t = currentTitle();
   renderSplit();
+
+  /* 发票类型：个人抬头或企业认证选个人抬头时，仅普票（锁定展示） */
+  const personalTitleNow = titleVal === 'personal';
+  const typeLocked = (cert === 'personal') || (cert === 'company' && personalTitleNow);
+  document.getElementById('invTypeFixed').style.display = typeLocked ? 'flex' : 'none';
+  document.getElementById('invType').style.display = typeLocked ? 'none' : '';
+  const typeLockTxt = document.getElementById('invTypeLockTxt');
+  if(typeLockTxt){
+    typeLockTxt.textContent = cert === 'personal'
+      ? '个人认证仅支持普票'
+      : '个人抬头仅支持普票';
+  }
+  if(typeLocked) document.getElementById('invType').value = 'normal';
 
   /* 自定义抬头必填校验 */
   let titleInvalid = false;
@@ -1102,7 +1103,7 @@ function evaluate(){
     const over = money(amt - 5000);
     document.getElementById('limitBlockTxt').innerHTML =
       (cert === 'personal'
-        ? '单张超过 <b>¥5,000</b>，仅支持<b>个人抬头</b>。超出 ' + over + ' 需提交特殊开票申请，经财务审核后人工开具。'
+        ? '单张超过 <b>¥5,000</b>，机构抬头无法自助开具，当前仅支持<b>个人抬头</b>。超出 ' + over + ' 如需按机构抬头开具，请<a class="goForm" id="regLink2">点击这里登记</a>。'
         : '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。');
     submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
@@ -1129,7 +1130,10 @@ document.addEventListener('click', e => {
   const a = e.target.closest('.goForm');
   if(!a) return;
   e.preventDefault();
-  toast(a.id === 'regLink' ? '跳转「线下开票申请」登记入口' : '跳转「特殊开票申请表」');
+  const id = a.id || '';
+  if(id === 'regLink' || id === 'regLink2') toast('跳转「线下开票申请」登记入口');
+  else if(id === 'profileLink' || id === 'profileLink2') toast('跳转个人主页 · 修改绑定信息');
+  else toast('跳转「特殊开票申请表」');
 });
 
 /* 提交 */
@@ -1144,15 +1148,9 @@ document.getElementById('submitBtn').onclick = () => {
   const type = (cert === 'company' && document.getElementById('invType').value === 'special')
     ? '增值税专用发票' : '增值税普通发票';
 
-  let title, taxNo;
-  if(cert === 'personal'){
-    const t = currentTitle();
-    title = t.name;
-    taxNo = t.tax;
-  }else{
-    title = document.getElementById('companyName').textContent;
-    taxNo = '91330106MA2H8X3K7P';
-  }
+  const t = currentTitle();
+  const title = t.name;
+  const taxNo = t.tax;
 
   const newRow = {
     id: 'RD' + Math.random().toString(36).slice(2, 10),
