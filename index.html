@@ -183,12 +183,6 @@
 
   /* ---------- 红票（负数冲销）：只靠负数金额 + 红色字体区分，不做额外装饰 ---------- */
   .money.neg{color:#C0392B;}
-  .red-link{font-size:10.5px;color:var(--text-3);margin-top:3px;line-height:1.6;}
-  .copy-inline{
-    color:var(--brand);cursor:pointer;border-bottom:1px dashed var(--brand-line);
-    font-family:ui-monospace,Menlo,monospace;
-  }
-  .copy-inline:hover{color:var(--brand-deep);border-bottom-style:solid;}
   .row-actions{display:flex;align-items:center;gap:5px;white-space:nowrap;}
   .dl-group{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;}
   .dl-group button{padding:5px 9px;font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
@@ -712,7 +706,6 @@ function renderTable(){
 
   tb.innerHTML = list.map(r => {
     const isRed = r.kind === 'red';
-    const canDownload = r.status === 'issued';
     /* 仅「蓝票 + 自助申请 + 已开票 + 普票」才可作废
        红票是冲销凭证，本身不可作废；专票不支持自助作废 */
     const showVoid = !isRed
@@ -731,21 +724,9 @@ function renderTable(){
       }
     }
 
-    /* 红票：标注与蓝票的对应关系 */
-    const linkHtml = isRed && r.linkedId
-      ? `<div class="red-link">冲销 <span class="copy-inline" data-jump="${r.linkedId}">${r.linkedId}</span></div>`
-      : '';
-    /* 蓝票已被红票冲销时，反向标注 */
-    const redOf = !isRed && r.status === 'voided'
-      ? (rows.find(x => x.kind === 'red' && x.linkedId === r.id))
-      : null;
-    const beVoidedHtml = redOf
-      ? `<div class="red-link">已由红票 <span class="copy-inline" data-jump="${redOf.id}">${redOf.id}</span> 冲销</div>`
-      : '';
-
     return `
     <tr class="${r.status === 'voided' ? 'is-voided' : ''}">
-      <td><div class="id-cell">${r.id}<span class="copy" data-copy="${r.id}" title="复制">⎘</span></div>${linkHtml}${beVoidedHtml}</td>
+      <td><div class="id-cell">${r.id}<span class="copy" data-copy="${r.id}" title="复制">⎘</span></div></td>
       <td class="muted">${r.apply}</td>
       <td class="${r.issue ? 'muted' : 'muted'}">${r.issue || '—'}</td>
       <td>
@@ -759,8 +740,8 @@ function renderTable(){
       <td>
         <div class="row-actions">
           <div class="dl-group">
-            <button ${canDownload ? '' : 'disabled'} data-dl="${r.id}" data-fmt="zip" title="${canDownload ? '默认打包下载 PDF + OFD + XML' : '当前状态不可下载'}">下载</button>
-            <button class="caret" ${canDownload ? '' : 'disabled'} data-caret="${r.id}" title="选择其他格式">▾</button>
+            <button data-dl="${r.id}" data-fmt="zip" title="默认打包下载 PDF + OFD + XML">下载</button>
+            <button class="caret" data-caret="${r.id}" title="选择其他格式">▾</button>
           </div>
           ${voidHtml}
         </div>
