@@ -305,15 +305,10 @@
   }
   .more-toggle:hover{background:var(--brand-soft);border-color:var(--brand-line);color:var(--brand-deep);}
   .more-toggle .mt-ico{
-    font-size:13px;line-height:1;color:var(--text-3);
+    margin-left:auto;font-size:14px;line-height:1;color:var(--text-3);
     transition:transform .2s;display:inline-block;
   }
   .more-toggle.open .mt-ico{transform:rotate(45deg);color:var(--brand);}
-  .more-toggle .mt-arrow{
-    margin-left:auto;font-size:10px;color:var(--text-3);
-    transition:transform .2s;display:inline-block;
-  }
-  .more-toggle.open .mt-arrow{transform:rotate(180deg);color:var(--brand);}
   .more-toggle.open{background:var(--brand-soft);border-style:solid;border-color:var(--brand-line);color:var(--brand-deep);}
   .more-body{
     padding:12px 12px 2px;margin-bottom:14px;
@@ -610,35 +605,29 @@
     </div>
 
     <button class="more-toggle" id="moreToggle" type="button">
-      <span class="mt-ico">＋</span><span class="mt-txt">更多</span>
-      <span class="opt">选填</span>
-      <span class="mt-arrow">▾</span>
+      <span class="mt-txt">更多</span><span class="mt-ico">＋</span>
     </button>
 
     <div class="more-body" id="moreBody" style="display:none">
       <div class="more-grid">
         <div class="field">
           <label class="lbl">规格型号</label>
-          <input class="input" id="spec" maxlength="40" placeholder="如：std / pro（选填）" />
+          <input class="input" id="spec" maxlength="40" placeholder="如：无" />
         </div>
         <div class="field">
           <label class="lbl">单位</label>
-          <input class="input" id="unit" maxlength="10" placeholder="如：次 / 月（选填）" />
+          <input class="input" id="unit" maxlength="10" placeholder="如：批" />
         </div>
         <div class="field">
           <label class="lbl">数量</label>
-          <input class="input" id="qty" maxlength="12" inputmode="decimal" placeholder="如：1（选填）" />
+          <input class="input" id="qty" maxlength="12" inputmode="decimal" placeholder="如：1" />
         </div>
       </div>
 
       <div class="field">
-        <label class="lbl">发票备注 <span class="opt">非必要不填写</span></label>
+        <label class="lbl">发票备注</label>
         <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
         <div class="counter"><span id="remarkCount">0</span>/200</div>
-        <div class="tipline info">
-          <span class="ti">i</span>
-          <span>所填内容将原样写入发票备注栏，开票后不可修改。请确保信息准确，因备注内容有误引发的重开或退票，需自行承担相应成本。</span>
-        </div>
       </div>
     </div>
 
@@ -648,15 +637,13 @@
       <div class="cbox on" id="cbMail"></div>
       <div class="recv-main">
         <div class="cap">邮箱接收</div>
-        <div class="def">默认 <b>lqh@example.com</b></div>
-        <input class="input" id="mailInput" placeholder="请输入接收邮箱" style="display:none" />
+        <input class="input" id="mailInput" placeholder="请输入接收邮箱" />
       </div>
     </div>
     <div class="recv-row">
       <div class="cbox" id="cbSms"></div>
       <div class="recv-main">
         <div class="cap">短信接收</div>
-        <div class="def">默认 <b>138****6688</b></div>
         <input class="input" id="smsInput" placeholder="请输入接收手机号" style="display:none" />
       </div>
     </div>
@@ -680,15 +667,7 @@
     </div>
     <div class="modal-body">
       <div class="void-info" id="voidInfo"></div>
-      <div class="void-warn">
-        请确认以下事项后再操作：
-        <ul>
-          <li>发票是否已交付客户或已用于报销</li>
-          <li>客户是否已完成抵扣或入账（如已入账需另行红冲处理）</li>
-          <li>作废后如需重新开具，需重新提交申请</li>
-        </ul>
-      </div>
-      <div class="field" style="margin-top:12px">
+      <div class="field" style="margin-top:14px">
         <label class="lbl">作废原因</label>
         <select class="input" id="voidReason">
           <option>开票信息有误（抬头/税号）</option>
@@ -869,8 +848,7 @@ function openVoid(id){
   document.getElementById('voidInfo').innerHTML =
     '<div><span class="k">发票票号</span>' + (r.no || '—') + '</div>' +
     '<div><span class="k">抬头</span>' + r.title + '</div>' +
-    '<div><span class="k">开票金额</span><b>' + money(r.amount) + '</b></div>' +
-    '<div><span class="k">开票方式</span>自助申请（支持自助作废）</div>';
+    '<div><span class="k">开票金额</span><b>' + money(r.amount) + '</b></div>';
   voidModal.classList.add('show');
 }
 document.getElementById('voidCancel').onclick = () => voidModal.classList.remove('show');
@@ -1034,11 +1012,11 @@ document.getElementById('subItem').addEventListener('change', e => {
 /* 接收方式 */
 document.getElementById('cbMail').onclick = function(){
   this.classList.toggle('on');
-  document.getElementById('mailInput').style.display = this.classList.contains('on') ? 'none' : '';
+  document.getElementById('mailInput').style.display = this.classList.contains('on') ? '' : 'none';
 };
 document.getElementById('cbSms').onclick = function(){
   this.classList.toggle('on');
-  document.getElementById('smsInput').style.display = this.classList.contains('on') ? 'none' : '';
+  document.getElementById('smsInput').style.display = this.classList.contains('on') ? '' : 'none';
 };
 
 /* 备注计数 */
