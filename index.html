@@ -450,10 +450,9 @@
     <div class="scroll">
       <div class="notice">
         <ol>
-          <li>仅<span class="badgeline">已消费金额</span>可以申请开具发票，充值未消费的充值余额不可开具发票，您可酌情申请退款；已开票金额不可重复开票，<b>已开票金额不予退款</b>。</li>
-          <li><b>自助开票</b>与<b>自助作废</b>均需在工作日 <b>10:00～19:00</b> 操作，通常在提交后 <b>2 个工作日</b>内开具完成；<b>超过 ¥5,000</b> 的发票无法自助开具，需提交<b>线下开票申请</b>，经审核后由人工为您开具。</li>
-          <li>根据我国税收相关政策要求，发票抬头原则上需与实名认证主体一致。<b>个人认证</b>可开具<span class="badgeline">企业抬头</span>的增值税普通发票：单张金额 <b>≤ ¥5,000</b> 时可线上自助开具，<b>不限张数</b>；<b>企业认证</b>仅可开具已认证企业的发票，抬头与税号不可修改。</li>
-          <li><b>个人认证</b>如需开具<span class="badgeline">增值税专用发票</span>，或需开具 <b>¥5,000 以上</b>的企业抬头普通发票，无法自助开具，请<a class="goForm" id="regLink">点击这里登记</a>，由财务人工处理。若变更认证主体确有困难、且可配合提供相应证明材料，也可通过该入口登记。</li>
+          <li>仅<span class="badgeline">已消费金额</span>可以申请开票发票，充值未消费的充值余额不可开具发票，您可酌情申请退款；已开票金额不可再次开票。</li>
+          <li><b>自助开票</b>工作日 10:00～19:00 可提交，通常在提交后 2 个工作日内开具完成；<b>超过 ¥5,000</b> 的发票需提交特殊开票申请，经财务审核后人工开具。</li>
+          <li><b>个人认证</b>可开具<span class="badgeline">企业抬头</span>的增值税普通发票：单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>；超过 ¥5,000 需提交特殊开票申请。<b>个人认证无法自助开具增值税专用发票</b>，需通过特殊开票申请表提交。<b>企业认证</b>仅可开具已认证企业的发票，抬头与税号不可修改。</li>
         </ol>
       </div>
 
@@ -635,7 +634,6 @@
           <li>发票是否已交付客户或已用于报销</li>
           <li>客户是否已完成抵扣或入账（如已入账需另行红冲处理）</li>
           <li>作废后如需重新开具，需重新提交申请</li>
-          <li>自助作废仅限工作日 <b>10:00～19:00</b> 操作</li>
         </ul>
       </div>
       <div class="field" style="margin-top:12px">
@@ -1047,24 +1045,24 @@ function evaluate(){
     mode = 'form';
     specialBlock.style.display = 'flex';
     document.getElementById('specialBlockTxt').innerHTML =
-      '增值税专用发票<b>暂不支持自助开具</b>。请通过<a class="goForm">线下开票申请表</a>提交登记，由财务审核后人工开具。';
-    submitBtn.textContent = '前往表单登记';
+      '增值税专用发票<b>暂不支持自助开具</b>。请通过<a class="goForm">特殊开票申请表</a>提交申请，由财务审核后人工开具。';
+    submitBtn.textContent = '前往表单申请';
     submitBtn.disabled = false;
-    footNote.innerHTML = '将跳转至「线下开票申请」登记表，由财务人工审核开具。';
+    footNote.innerHTML = '将跳转至「特殊开票申请」表单，由财务人工审核开具。';
     scrollToBlock(specialBlock);
     return;
   }
 
-  /* 普票 > 5000 → 线下开票申请（人工），抬头仅可选个人 */
+  /* 普票 > 5000 → 特殊开票申请（人工），抬头仅可选个人 */
   if(amt > 5000){
     mode = 'specialApply';
     limitBlock.style.display = 'flex';
     const over = money(amt - 5000);
     document.getElementById('limitBlockTxt').innerHTML =
       (cert === 'personal'
-        ? '单张超过 <b>¥5,000</b>，仅支持<b>个人抬头</b>。超出 ' + over + ' 需提交<b>线下开票申请</b>，经审核后由人工为您开具。'
-        : '单张金额超过 <b>¥5,000</b>，需提交<b>线下开票申请</b>，经审核后由人工为您开具。');
-    submitBtn.textContent = '提交线下开票申请';
+        ? '单张超过 <b>¥5,000</b>，仅支持<b>个人抬头</b>。超出 ' + over + ' 需提交特殊开票申请，经财务审核后人工开具。'
+        : '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。');
+    submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
     footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
     scrollToBlock(limitBlock);
@@ -1085,18 +1083,19 @@ function evaluate(){
       : '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
 }
 
-document.addEventListener('click', e => {
+document.getElementById('drawer').addEventListener('click', e => {
   const a = e.target.closest('.goForm');
-  if(!a) return;
-  e.preventDefault();
-  toast(a.id === 'regLink' ? '跳转「线下开票申请」登记入口' : '跳转「线下开票申请表」');
+  if(a){
+    e.preventDefault();
+    toast('跳转「特殊开票申请表」');
+  }
 });
 
 /* 提交 */
 document.getElementById('submitBtn').onclick = () => {
   const amt = num(amountEl.value);
-  if(mode === 'form'){ toast('跳转「线下开票申请表」登记入口'); return; }
-  if(mode === 'specialApply'){ toast('线下开票申请已提交，等待财务审核'); closeDrawer(); return; }
+  if(mode === 'form'){ toast('跳转「特殊开票申请表」'); return; }
+  if(mode === 'specialApply'){ toast('特殊开票申请已提交，等待财务审核'); closeDrawer(); return; }
 
   const sub = document.getElementById('subItem');
   const subTxt = sub.options[sub.selectedIndex].text;
