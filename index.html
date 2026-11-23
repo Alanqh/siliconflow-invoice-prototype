@@ -182,6 +182,23 @@
   .tag-voided{background:#F2F1F5;color:#8B879A;text-decoration:line-through;}
   .tag-special{background:#EEF3FF;color:#2F5FD0;}
   tbody tr.is-voided td:not(:last-child){color:#A9A6B6;}
+
+  /* ---------- 红票（负数冲销） ---------- */
+  tbody tr.is-red td{background:#FFF9F9;}
+  tbody tr.is-red:hover td{background:#FFF4F4;}
+  .kind-badge{
+    display:inline-block;margin-left:6px;font-size:10px;font-weight:600;
+    padding:1px 5px;border-radius:4px;vertical-align:middle;
+  }
+  .type-cell{display:inline-flex;align-items:center;flex-wrap:nowrap;white-space:nowrap;}
+  .kind-badge.red{background:#FDE8E8;color:#C0392B;}
+  .money.neg{color:#C0392B;font-weight:600;}
+  .red-link{font-size:10.5px;color:var(--text-3);margin-top:3px;line-height:1.6;}
+  .copy-inline{
+    color:var(--brand);cursor:pointer;border-bottom:1px dashed var(--brand-line);
+    font-family:ui-monospace,Menlo,monospace;
+  }
+  .copy-inline:hover{color:var(--brand-deep);border-bottom-style:solid;}
   .row-actions{display:flex;align-items:center;gap:5px;white-space:nowrap;}
   .dl-group{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;}
   .dl-group button{padding:5px 9px;font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
@@ -294,26 +311,6 @@
   }
   .section-title::after{content:"";flex:1;height:1px;background:var(--line);}
   .section-title b{font-weight:600;color:var(--text-2);font-size:12.5px;letter-spacing:.2px;}
-
-  /* ---------- 更多（选填字段折叠） ---------- */
-  .more-head{
-    display:flex;align-items:center;justify-content:space-between;
-    margin:18px 0 10px;
-  }
-  .more-title{font-size:12.5px;font-weight:600;color:var(--text-2);letter-spacing:.2px;}
-  .more-act{
-    font-size:12px;color:var(--brand);background:none;border:0;padding:2px 4px;
-    cursor:pointer;font-weight:500;border-radius:5px;transition:.15s;
-  }
-  .more-act:hover{background:var(--brand-soft);color:var(--brand-deep);}
-  .more-body{
-    padding:12px 12px 2px;margin-bottom:14px;
-    background:#FAFAFD;border:1px solid var(--line);border-radius:10px;
-  }
-  .more-body .field:last-child{margin-bottom:12px;}
-  .more-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-  .more-grid .field{margin-bottom:12px;}
-  .more-grid .lbl{font-size:12px;}
 
   .lockbar{
     display:flex;align-items:center;gap:8px;background:#FAF9FD;border:1px solid var(--line);
@@ -598,32 +595,10 @@
       </div>
     </div>
 
-    <div class="more-head">
-      <span class="more-title">更多</span>
-      <button class="more-act" id="moreAct" type="button">展开</button>
-    </div>
-
-    <div class="more-body" id="moreBody" style="display:none">
-      <div class="more-grid">
-        <div class="field">
-          <label class="lbl">规格型号</label>
-          <input class="input" id="spec" maxlength="40" placeholder="如：无" />
-        </div>
-        <div class="field">
-          <label class="lbl">单位</label>
-          <input class="input" id="unit" maxlength="10" placeholder="如：批" />
-        </div>
-        <div class="field">
-          <label class="lbl">数量</label>
-          <input class="input" id="qty" maxlength="12" inputmode="decimal" placeholder="如：1" />
-        </div>
-      </div>
-
-      <div class="field">
-        <label class="lbl">发票备注</label>
-        <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
-        <div class="counter"><span id="remarkCount">0</span>/200</div>
-      </div>
+    <div class="field">
+      <label class="lbl">发票备注</label>
+      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
+      <div class="counter"><span id="remarkCount">0</span>/200</div>
     </div>
 
     <div class="section-title"><b>发票接收</b></div>
@@ -692,14 +667,21 @@
 /* ============ 数据 ============ */
 const AVAILABLE = 12860.42;
 
+/* 票据模型：
+   kind: 'blue' 蓝票（正常开具） | 'red' 红票（负数冲销，成对出现在蓝票作废后）
+   linkedId: 红票对应的蓝票记录 id
+   origin:   蓝票被作废后生成的红票标记
+*/
 const rows = [
-  { id:'RDlavccuebqg', apply:'2026-11-13 14:22', issue:'2026-11-13 14:23', title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:'26112000000123', amount:0.42, source:'self', status:'issued' },
-  { id:'Dbbkeaqdvvu', apply:'2026-11-13 10:05', issue:'2026-11-13 10:06', title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:'26112000000119', amount:0.42, source:'self', status:'issued' },
-  { id:'RDm2k8xzq1', apply:'2026-11-12 16:40', issue:'2026-11-13 09:12', title:'杭州云枢科技有限公司', tax:'91330106MA2H8X3K7P', type:'增值税普通发票', no:'26112000000108', amount:3200, source:'self', status:'issued' },
-  { id:'RDn7pc4vte', apply:'2026-11-10 11:02', issue:'2026-11-12 15:30', title:'北京智算信息技术有限公司', tax:'91110108MA01T9XK4M', type:'增值税普通发票', no:'26112000000096', amount:8800, source:'manual', status:'issued' },
-  { id:'RDq1f9abzc', apply:'2026-11-09 09:47', issue:'2026-11-10 10:20', title:'上海码上智能科技有限公司', tax:'91310115MA1K4Q3L2N', type:'增值税专用发票', no:'26112000000071', amount:15000, source:'manual', status:'issued' },
-  { id:'RDr5t2mxdu', apply:'2026-11-08 20:11', issue:null, title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:null, amount:128, source:'self', status:'issuing' },
-  { id:'RDs9k3qwnb', apply:'2026-11-05 13:20', issue:'2026-11-05 13:21', title:'成都轻舟数据有限公司', tax:'91510100MA6C2P8T5R', type:'增值税普通发票', no:'26111900000882', amount:2600, source:'self', status:'voided' }
+  { id:'RDlavccuebqg', apply:'2026-11-13 14:22', issue:'2026-11-13 14:23', title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:'26112000000123', amount:0.42, source:'self', status:'issued', kind:'blue' },
+  { id:'Dbbkeaqdvvu', apply:'2026-11-13 10:05', issue:'2026-11-13 10:06', title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:'26112000000119', amount:0.42, source:'self', status:'issued', kind:'blue' },
+  { id:'RDm2k8xzq1', apply:'2026-11-12 16:40', issue:'2026-11-13 09:12', title:'杭州云枢科技有限公司', tax:'91330106MA2H8X3K7P', type:'增值税普通发票', no:'26112000000108', amount:3200, source:'self', status:'issued', kind:'blue' },
+  { id:'RDn7pc4vte', apply:'2026-11-10 11:02', issue:'2026-11-12 15:30', title:'北京智算信息技术有限公司', tax:'91110108MA01T9XK4M', type:'增值税普通发票', no:'26112000000096', amount:8800, source:'manual', status:'issued', kind:'blue' },
+  { id:'RDq1f9abzc', apply:'2026-11-09 09:47', issue:'2026-11-10 10:20', title:'上海码上智能科技有限公司', tax:'91310115MA1K4Q3L2N', type:'增值税专用发票', no:'26112000000071', amount:15000, source:'manual', status:'issued', kind:'blue' },
+  { id:'RDr5t2mxdu', apply:'2026-11-08 20:11', issue:null, title:'吕*华（个人抬头）', tax:'—', type:'增值税普通发票', no:null, amount:128, source:'self', status:'issuing', kind:'blue' },
+  /* 已作废的蓝票 + 与之对应的红票（负数） */
+  { id:'RDs9k3qwnb', apply:'2026-11-05 13:20', issue:'2026-11-05 13:21', title:'成都轻舟数据有限公司', tax:'91510100MA6C2P8T5R', type:'增值税普通发票', no:'26111900000882', amount:2600, source:'self', status:'voided', kind:'blue' },
+  { id:'RDv7hq2kfp', apply:'2026-11-06 10:32', issue:'2026-11-06 10:33', title:'成都轻舟数据有限公司', tax:'91510100MA6C2P8T5R', type:'增值税普通发票', no:'26111900000901', amount:-2600, source:'self', status:'issued', kind:'red', linkedId:'RDs9k3qwnb' }
 ];
 
 const money = n => '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
@@ -729,9 +711,14 @@ function renderTable(){
   const open = inBusinessHours();
 
   tb.innerHTML = list.map(r => {
+    const isRed = r.kind === 'red';
     const canDownload = r.status === 'issued';
-    /* 仅自助申请 + 已开票 才出现作废按钮 */
-    const showVoid = r.status === 'issued' && r.source === 'self';
+    /* 仅「蓝票 + 自助申请 + 已开票 + 普票」才可作废
+       红票是冲销凭证，本身不可作废；专票不支持自助作废 */
+    const showVoid = !isRed
+      && r.status === 'issued'
+      && r.source === 'self'
+      && r.type === '增值税普通发票';
 
     let voidHtml = '';
     if(showVoid){
@@ -744,18 +731,30 @@ function renderTable(){
       }
     }
 
+    /* 红票：标注与蓝票的对应关系 */
+    const linkHtml = isRed && r.linkedId
+      ? `<div class="red-link">冲销 <span class="copy-inline" data-jump="${r.linkedId}">${r.linkedId}</span></div>`
+      : '';
+    /* 蓝票已被红票冲销时，反向标注 */
+    const redOf = !isRed && r.status === 'voided'
+      ? (rows.find(x => x.kind === 'red' && x.linkedId === r.id))
+      : null;
+    const beVoidedHtml = redOf
+      ? `<div class="red-link">已由红票 <span class="copy-inline" data-jump="${redOf.id}">${redOf.id}</span> 冲销</div>`
+      : '';
+
     return `
-    <tr class="${r.status === 'voided' ? 'is-voided' : ''}">
-      <td><div class="id-cell">${r.id}<span class="copy" data-copy="${r.id}" title="复制">⎘</span></div></td>
+    <tr class="${r.status === 'voided' ? 'is-voided' : ''} ${isRed ? 'is-red' : ''}">
+      <td><div class="id-cell">${r.id}<span class="copy" data-copy="${r.id}" title="复制">⎘</span></div>${linkHtml}${beVoidedHtml}</td>
       <td class="muted">${r.apply}</td>
       <td class="${r.issue ? 'muted' : 'muted'}">${r.issue || '—'}</td>
       <td>
         <div style="font-size:12.5px">${r.title}</div>
-        <div class="muted" style="font-size:11px;margin-top:2px">${r.tax}</div>
+        ${r.tax && r.tax !== '—' ? `<div class="muted" style="font-size:11px;margin-top:2px">${r.tax}</div>` : ''}
       </td>
-      <td>${r.type}</td>
+      <td><span class="type-cell">${r.type}${isRed ? '<span class="kind-badge red">红票</span>' : ''}</span></td>
       <td class="muted" style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">${r.no || '—'}</td>
-      <td class="money" style="text-align:right">${money(r.amount)}</td>
+      <td class="money ${isRed ? 'neg' : ''}" style="text-align:right">${money(r.amount)}</td>
       <td><span class="tag ${r.source === 'self' ? 'tag-self' : 'tag-manual'}">${r.source === 'self' ? '自助申请' : '人工开具'}</span></td>
       <td><span class="tag tag-${r.status}">${STATUS_TXT[r.status]}</span></td>
       <td>
@@ -835,6 +834,11 @@ document.addEventListener('click', e => {
 const voidModal = document.getElementById('voidModal');
 let voidId = null;
 function openVoid(id){
+  /* 兜底校验：非操作时段不允许进入作废流程 */
+  if(!inBusinessHours()){
+    toast(OUT_HOURS_TIP + '暂不可作废');
+    return;
+  }
   voidId = id;
   const r = rows.find(x => x.id === id);
   document.getElementById('voidInfo').innerHTML =
@@ -845,11 +849,44 @@ function openVoid(id){
 }
 document.getElementById('voidCancel').onclick = () => voidModal.classList.remove('show');
 document.getElementById('voidConfirm').onclick = () => {
+  if(!inBusinessHours()){
+    voidModal.classList.remove('show');
+    toast(OUT_HOURS_TIP + '暂不可作废');
+    return;
+  }
   const r = rows.find(x => x.id === voidId);
-  if(r) r.status = 'voided';
+  if(!r) return;
+
+  /* 1) 蓝票状态改为已作废 */
+  r.status = 'voided';
+
+  /* 2) 同时开具一张红票：金额取负，与蓝票建立对应关系 */
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+              + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  const redNo = '261' + String(Math.floor(Math.random()*900000) + 100000);
+  const redRow = {
+    id: 'RD' + Math.random().toString(36).slice(2, 10),
+    apply: stamp,
+    issue: stamp,
+    title: r.title,
+    tax: r.tax,
+    type: r.type,
+    no: redNo,
+    amount: -Math.abs(r.amount),
+    source: r.source,
+    status: 'issued',
+    kind: 'red',
+    linkedId: r.id
+  };
+  /* 红票插在蓝票前一行，便于对照 */
+  const idx = rows.indexOf(r);
+  rows.splice(idx, 0, redRow);
+
   voidModal.classList.remove('show');
   renderTable();
-  toast('发票已作废，' + money(r.amount) + ' 已退回可开票额度');
+  toast('蓝票 ' + (r.no || '') + ' 已作废，红票 ' + redNo + ' 已开具（' + money(redRow.amount) + '），' + money(Math.abs(r.amount)) + ' 已退回可开票额度');
 };
 
 /* ============ 申请抽屉 ============ */
@@ -869,8 +906,6 @@ function resetDrawer(){
   document.getElementById('amount').value = '';
   document.getElementById('remark').value = '';
   document.getElementById('remarkCount').textContent = '0';
-  ['spec','unit','qty'].forEach(id => document.getElementById(id).value = '');
-  setMoreOpen(false);
   document.getElementById('invType').value = 'normal';
   document.getElementById('mailInput').value = '';
   document.getElementById('smsInput').value = '';
@@ -984,13 +1019,15 @@ function currentTitle(){
   return hit ? { ...hit, kind:'history' } : PERSONAL_TITLE;
 }
 
-/* 选中抬头后，下方展示税号；选自定义时改为展开两个输入框 */
+/* 选中抬头后，下方展示税号；选自定义时改为展开两个输入框
+   个人抬头没有纳税人识别号，整块隐藏（不显示空值或短横线） */
 function renderSplit(){
   const t = currentTitle();
   const custom = titleVal === CUSTOM_OPT;
-  document.getElementById('taxBlock').style.display = custom ? 'none' : '';
+  const noTax = !t.tax || t.tax === '—';
+  document.getElementById('taxBlock').style.display = (custom || noTax) ? 'none' : '';
   document.getElementById('titleCustom').style.display = custom ? '' : 'none';
-  document.getElementById('dispTax').textContent = t.tax;
+  document.getElementById('dispTax').textContent = noTax ? '' : t.tax;
 }
 
 function applyCert(){
@@ -1032,15 +1069,6 @@ const remarkEl = document.getElementById('remark');
 remarkEl.addEventListener('input', () => {
   document.getElementById('remarkCount').textContent = remarkEl.value.length;
 });
-
-/* 「更多」选填字段折叠 */
-const moreAct = document.getElementById('moreAct');
-const moreBody = document.getElementById('moreBody');
-function setMoreOpen(open){
-  moreAct.textContent = open ? '收起' : '展开';
-  moreBody.style.display = open ? '' : 'none';
-}
-moreAct.onclick = () => setMoreOpen(moreBody.style.display === 'none');
 
 /* 规则引擎 */
 let mode = 'self';
@@ -1118,12 +1146,13 @@ function evaluate(){
   /* 普票 > 5000 → 特殊开票申请（人工），抬头仅可选个人 */
   if(amt > 5000){
     mode = 'specialApply';
-    /* 个人认证：超限时抬头已自动收敛为个人抬头，不再额外提示 */
-    if(cert === 'company'){
-      limitBlock.style.display = 'flex';
-      document.getElementById('limitBlockTxt').innerHTML =
-        '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。';
-    }
+    limitBlock.style.display = 'flex';
+    document.getElementById('limitBlockTxt').innerHTML = cert === 'personal'
+      ? '<b>个人认证</b>账户自助开具机构抬头的增值税普通发票，单张金额上限为 <b>¥5,000</b>，'
+        + '因此本单只能选择<b>个人抬头</b>。'
+        + '<br>如确需按机构抬头发票开具，且可配合提供相应证明材料，请'
+        + '<a class="goForm" id="regLink2">点击这里登记</a>，由财务人工处理。'
+      : '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。';
     submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
     footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
@@ -1184,9 +1213,7 @@ document.getElementById('submitBtn').onclick = () => {
     status: 'issuing',
     sub: subTxt,
     remark: remarkEl.value,
-    spec: document.getElementById('spec').value.trim(),
-    unit: document.getElementById('unit').value.trim(),
-    qty:  document.getElementById('qty').value.trim()
+    kind: 'blue'
   };
   rows.unshift(newRow);
   renderTable();
