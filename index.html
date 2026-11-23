@@ -295,6 +295,35 @@
   .section-title::after{content:"";flex:1;height:1px;background:var(--line);}
   .section-title b{font-weight:600;color:var(--text-2);font-size:12.5px;letter-spacing:.2px;}
 
+  /* ---------- 更多（选填字段折叠） ---------- */
+  .more-toggle{
+    display:flex;align-items:center;gap:6px;width:100%;
+    padding:9px 12px;margin:4px 0 14px;border-radius:9px;
+    background:#FAFAFD;border:1px dashed var(--line);
+    font-size:12.5px;font-weight:500;color:var(--text-2);
+    transition:.15s;cursor:pointer;
+  }
+  .more-toggle:hover{background:var(--brand-soft);border-color:var(--brand-line);color:var(--brand-deep);}
+  .more-toggle .mt-ico{
+    font-size:13px;line-height:1;color:var(--text-3);
+    transition:transform .2s;display:inline-block;
+  }
+  .more-toggle.open .mt-ico{transform:rotate(45deg);color:var(--brand);}
+  .more-toggle .mt-arrow{
+    margin-left:auto;font-size:10px;color:var(--text-3);
+    transition:transform .2s;display:inline-block;
+  }
+  .more-toggle.open .mt-arrow{transform:rotate(180deg);color:var(--brand);}
+  .more-toggle.open{background:var(--brand-soft);border-style:solid;border-color:var(--brand-line);color:var(--brand-deep);}
+  .more-body{
+    padding:12px 12px 2px;margin-bottom:14px;
+    background:#FAFAFD;border:1px solid var(--line);border-radius:10px;
+  }
+  .more-body .field:last-child{margin-bottom:12px;}
+  .more-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .more-grid .field{margin-bottom:12px;}
+  .more-grid .lbl{font-size:12px;}
+
   .lockbar{
     display:flex;align-items:center;gap:8px;background:#FAF9FD;border:1px solid var(--line);
     border-radius:9px;padding:9px 11px;font-size:13px;color:var(--text);
@@ -450,9 +479,9 @@
     <div class="scroll">
       <div class="notice">
         <ol>
-          <li>仅<span class="badgeline">已消费金额</span>可以申请开票发票，充值未消费的充值余额不可开具发票，您可酌情申请退款；已开票金额不可再次开票。</li>
-          <li><b>自助开票</b>工作日 10:00～19:00 可提交，通常在提交后 2 个工作日内开具完成；<b>超过 ¥5,000</b> 的发票需提交特殊开票申请，经财务审核后人工开具。</li>
-          <li><b>个人认证</b>可开具<span class="badgeline">企业抬头</span>的增值税普通发票：单张金额 <b>≤ ¥5,000</b> 时线上自助开具，<b>不限张数</b>；超过 ¥5,000 需提交特殊开票申请。<b>个人认证无法自助开具增值税专用发票</b>，需通过特殊开票申请表提交。<b>企业认证</b>仅可开具已认证企业的发票，抬头与税号不可修改。</li>
+          <li>仅<span class="badgeline">已消费金额</span>可以申请开具发票，充值未消费的充值余额不可开具发票；已开票金额不可重复开票，<b>已开票金额不予退款</b>；</li>
+          <li><b>自助开票</b>与<b>自助作废</b>均需在工作日 <b>10:00～19:00</b> 操作，通常在提交后 <b>2 个工作日</b>内开具完成；</li>
+          <li><b>个人认证</b>账户若自助开具<span class="badgeline">机构抬头</span>的增值税普通发票，单张金额须<b>小于等于 5000 元</b>；<b>企业认证</b>账户开具发票时只能使用认证信息作为抬头。如有特殊需求，且可以配合提供相应证明材料，请<a class="goForm" id="regLink">点击这里登记</a>。</li>
         </ol>
       </div>
 
@@ -580,13 +609,36 @@
       </div>
     </div>
 
-    <div class="field">
-      <label class="lbl">发票备注 <span class="opt">非必要不填写</span></label>
-      <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
-      <div class="counter"><span id="remarkCount">0</span>/200</div>
-      <div class="tipline info">
-        <span class="ti">i</span>
-        <span>所填内容将原样写入发票备注栏，开票后不可修改。请确保信息准确，因备注内容有误引发的重开或退票，需自行承担相应成本。</span>
+    <button class="more-toggle" id="moreToggle" type="button">
+      <span class="mt-ico">＋</span><span class="mt-txt">更多</span>
+      <span class="opt">选填</span>
+      <span class="mt-arrow">▾</span>
+    </button>
+
+    <div class="more-body" id="moreBody" style="display:none">
+      <div class="more-grid">
+        <div class="field">
+          <label class="lbl">规格型号</label>
+          <input class="input" id="spec" maxlength="40" placeholder="如：std / pro（选填）" />
+        </div>
+        <div class="field">
+          <label class="lbl">单位</label>
+          <input class="input" id="unit" maxlength="10" placeholder="如：次 / 月（选填）" />
+        </div>
+        <div class="field">
+          <label class="lbl">数量</label>
+          <input class="input" id="qty" maxlength="12" inputmode="decimal" placeholder="如：1（选填）" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="lbl">发票备注 <span class="opt">非必要不填写</span></label>
+        <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
+        <div class="counter"><span id="remarkCount">0</span>/200</div>
+        <div class="tipline info">
+          <span class="ti">i</span>
+          <span>所填内容将原样写入发票备注栏，开票后不可修改。请确保信息准确，因备注内容有误引发的重开或退票，需自行承担相应成本。</span>
+        </div>
       </div>
     </div>
 
@@ -847,6 +899,8 @@ function resetDrawer(){
   document.getElementById('amount').value = '';
   document.getElementById('remark').value = '';
   document.getElementById('remarkCount').textContent = '0';
+  ['spec','unit','qty'].forEach(id => document.getElementById(id).value = '');
+  setMoreOpen(false);
   document.getElementById('invType').value = 'normal';
   ['amtErr','specialBlock','limitBlock'].forEach(id => {
     document.getElementById(id).style.display = 'none';
@@ -993,6 +1047,16 @@ remarkEl.addEventListener('input', () => {
   document.getElementById('remarkCount').textContent = remarkEl.value.length;
 });
 
+/* 「更多」选填字段折叠 */
+const moreToggle = document.getElementById('moreToggle');
+const moreBody = document.getElementById('moreBody');
+function setMoreOpen(open){
+  moreToggle.classList.toggle('open', open);
+  moreToggle.querySelector('.mt-txt').textContent = open ? '收起' : '更多';
+  moreBody.style.display = open ? '' : 'none';
+}
+moreToggle.onclick = () => setMoreOpen(moreBody.style.display === 'none');
+
 /* 规则引擎 */
 let mode = 'self';
 let prevBlock = null;
@@ -1083,12 +1147,11 @@ function evaluate(){
       : '提交后预计 <b>2 个工作日</b> 内开具完成，可在「发票记录」中查看、下载或自助作废。';
 }
 
-document.getElementById('drawer').addEventListener('click', e => {
+document.addEventListener('click', e => {
   const a = e.target.closest('.goForm');
-  if(a){
-    e.preventDefault();
-    toast('跳转「特殊开票申请表」');
-  }
+  if(!a) return;
+  e.preventDefault();
+  toast(a.id === 'regLink' ? '跳转「线下开票申请」登记入口' : '跳转「特殊开票申请表」');
 });
 
 /* 提交 */
@@ -1125,7 +1188,10 @@ document.getElementById('submitBtn').onclick = () => {
     source: 'self',
     status: 'issuing',
     sub: subTxt,
-    remark: remarkEl.value
+    remark: remarkEl.value,
+    spec: document.getElementById('spec').value.trim(),
+    unit: document.getElementById('unit').value.trim(),
+    qty:  document.getElementById('qty').value.trim()
   };
   rows.unshift(newRow);
   renderTable();
