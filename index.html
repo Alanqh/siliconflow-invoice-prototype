@@ -1118,12 +1118,12 @@ function evaluate(){
   /* 普票 > 5000 → 特殊开票申请（人工），抬头仅可选个人 */
   if(amt > 5000){
     mode = 'specialApply';
-    limitBlock.style.display = 'flex';
-    const over = money(amt - 5000);
-    document.getElementById('limitBlockTxt').innerHTML =
-      (cert === 'personal'
-        ? '单张超过 <b>¥5,000</b>，机构抬头无法自助开具，当前仅支持<b>个人抬头</b>。超出 ' + over + ' 如需按机构抬头开具，请<a class="goForm" id="regLink2">点击这里登记</a>。'
-        : '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。');
+    /* 个人认证：超限时抬头已自动收敛为个人抬头，不再额外提示 */
+    if(cert === 'company'){
+      limitBlock.style.display = 'flex';
+      document.getElementById('limitBlockTxt').innerHTML =
+        '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。';
+    }
     submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
     footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
