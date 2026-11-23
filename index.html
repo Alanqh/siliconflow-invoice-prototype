@@ -638,7 +638,7 @@
       <div class="modal-icon">⚠</div>
       <div>
         <h3>确认作废该发票？</h3>
-        <p>作废后该发票立即失效，对应开票金额将退回可开票额度。</p>
+        <p>作废后原蓝票状态变为「已作废」，同时开具一张等额红票（金额为负）冲销，对应金额退回可开票额度。</p>
       </div>
     </div>
     <div class="modal-body">
@@ -684,25 +684,36 @@ const rows = [
   { id:'RDv7hq2kfp', apply:'2026-11-06 10:32', issue:'2026-11-06 10:33', title:'成都轻舟数据有限公司', tax:'91510100MA6C2P8T5R', type:'增值税普通发票', no:'26111900000901', amount:-2600, source:'self', status:'issued', kind:'red', linkedId:'RDs9k3qwnb' }
 ];
 
-const money = n => '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+/* 负数金额按会计惯例写作 -¥xx，而不是 ¥-xx */
+const money = n => (n < 0 ? '-¥' + Math.abs(n).toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 })
+                          : '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits:2, maximumFractionDigits:2 }));
 const fmtInput = s => s.replace(/[^\d.]/g,'');
 const num = s => { const v = parseFloat(String(s).replace(/,/g,'')); return isNaN(v) ? 0 : v; };
 
 const STATUS_TXT = { issued:'已开票', issuing:'开票中', voided:'已作废' };
 
-/* ===== 操作时段校验：工作日 10:00–19:00 ===== */
-const HOUR_START = 10, HOUR_END = 19;
-let demoOutOfHours = false;   /* 原型演示用：强制模拟非操作时段 */
+/* ===== 操作时段校验 =====
+   规则：工作日 10:00–19:00。原型不绑定系统时间，
+   完全由顶部「操作时段」Tab 切换决定，便于演示两种状态。
+*/
+let demoOutOfHours = false;   /* false = 操作时段内；true = 非操作时段 */
 
+/* 原型内是否处于操作时段（只受 Tab 控制） */
 function inBusinessHours(){
-  if(demoOutOfHours) return false;
-  const now = new Date();
-  const day = now.getDay();            /* 0=周日, 6=周六 */
-  if(day === 0 || day === 6) return false;
-  const h = now.getHours() + now.getMinutes()/60;
-  return h >= HOUR_START && h < HOUR_END;
+  return !demoOutOfHours;
 }
 const OUT_HOURS_TIP = '当前不在操作时段（工作日 10:00–19:00），' ;
+
+/* 演示时钟：开具/作废产生的时间戳同样不取系统时间，
+   避免演示时出现「19 点后开出 23 点的票」这类矛盾 */
+const DEMO_DATE = '2026-11-23';
+let demoMin = 15 * 60 + 6;   /* 基准 15:06，每次操作递增 1 分钟 */
+function demoStamp(){
+  demoMin = Math.min(demoMin + 1, 18 * 60 + 59);
+  const h = String(Math.floor(demoMin / 60)).padStart(2, '0');
+  const m = String(demoMin % 60).padStart(2, '0');
+  return DEMO_DATE + ' ' + h + ':' + m;
+}
 
 /* ============ 表格渲染 ============ */
 function renderTable(){
@@ -861,11 +872,9 @@ document.getElementById('voidConfirm').onclick = () => {
   r.status = 'voided';
 
   /* 2) 同时开具一张红票：金额取负，与蓝票建立对应关系 */
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  const stamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
-              + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-  const redNo = '261' + String(Math.floor(Math.random()*900000) + 100000);
+  const stamp = demoStamp();
+  /* 票号与列表示例保持同一规则：14 位数字 */
+  const redNo = '261119' + String(Math.floor(Math.random()*90000000) + 10000000);
   const redRow = {
     id: 'RD' + Math.random().toString(36).slice(2, 10),
     apply: stamp,
@@ -1202,7 +1211,7 @@ document.getElementById('submitBtn').onclick = () => {
 
   const newRow = {
     id: 'RD' + Math.random().toString(36).slice(2, 10),
-    apply: '2026-11-23 17:09',
+    apply: demoStamp(),
     issue: null,
     title: title,
     tax: taxNo,
