@@ -579,7 +579,7 @@
     </div>
 
     <div class="field">
-      <label class="lbl">发票备注</label>
+      <label class="lbl">发票备注<span class="opt">选填，将印在发票备注栏</span></label>
       <textarea class="input" id="remark" maxlength="200" placeholder="如：合同编号 / 项目名称 / 报销说明"></textarea>
       <div class="counter"><span id="remarkCount">0</span>/200</div>
     </div>
@@ -634,14 +634,12 @@
   </div>
 </div>
 
-<!-- 下载格式浮层 -->
+<!-- 下载格式浮层：三种文件单独下载，不提供打包 -->
 <div class="popover" id="fmtPop">
   <div class="po-head">选择下载格式</div>
-  <button data-fmt="zip"><span class="fmt">ZIP</span>全部格式打包下载</button>
-  <div class="sep"></div>
-  <button data-fmt="pdf"><span class="fmt">PDF</span>仅下载 PDF</button>
-  <button data-fmt="ofd"><span class="fmt">OFD</span>仅下载 OFD</button>
-  <button data-fmt="xml"><span class="fmt">XML</span>仅下载 明细 XML</button>
+  <button data-fmt="pdf"><span class="fmt">PDF</span>下载 PDF</button>
+  <button data-fmt="ofd"><span class="fmt">OFD</span>下载 OFD</button>
+  <button data-fmt="xml"><span class="fmt">XML</span>下载 明细 XML</button>
 </div>
 
 <div class="toasts" id="toasts"></div>
@@ -740,8 +738,8 @@ function renderTable(){
       <td>
         <div class="row-actions">
           <div class="dl-group">
-            <button data-dl="${r.id}" data-fmt="zip" title="默认打包下载 PDF + OFD + XML">下载</button>
-            <button class="caret" data-caret="${r.id}" title="选择其他格式">▾</button>
+            <button data-dl="${r.id}" data-fmt="pdf" title="下载 PDF（右侧可选择 OFD / XML）">下载</button>
+            <button class="caret" data-caret="${r.id}" title="选择下载格式">▾</button>
           </div>
           ${voidHtml}
         </div>
@@ -779,9 +777,9 @@ document.getElementById('tbody').addEventListener('click', e => {
   if(vb && !vb.disabled){ openVoid(vb.dataset.void); return; }
 });
 
-/* 下载 */
+/* 下载：PDF / OFD / XML 三种文件各自单独下载，不做打包 */
 function doDownload(id, fmt){
-  const map = { zip:'PDF + OFD + XML 压缩包', pdf:'PDF', ofd:'OFD', xml:'明细 XML' };
+  const map = { pdf:'PDF 文件', ofd:'OFD 文件', xml:'明细 XML 文件' };
   const r = rows.find(x => x.id === id);
   toast('正在下载「' + (map[fmt] || fmt) + '」· 票号 ' + (r?.no || '—'));
   closeFmtPop();
