@@ -187,7 +187,6 @@
   .dl-group{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:#fff;}
   .dl-group button{padding:5px 9px;font-size:12px;color:var(--text-2);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
   .dl-group button:hover{background:#F6F4FE;color:var(--brand-deep);}
-  .dl-group .caret{border-left:1px solid var(--line);padding:5px 6px;}
   .dl-group button:disabled{color:#C2BFCD;cursor:not-allowed;background:#fff;}
   .txt-btn{font-size:12px;color:var(--text-2);padding:5px 7px;border-radius:6px;}
   .txt-btn:hover{background:#F6F4FE;color:var(--brand-deep);}
@@ -372,24 +371,21 @@
   }
   .void-warn ul{margin:4px 0 0;padding-left:15px;}
   .void-warn li::marker{color:#D88;}
-  .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px 18px;}
 
-  /* ---------- 下拉浮层 ---------- */
-  .popover{
-    position:fixed;z-index:80;background:#fff;border:1px solid var(--line);
-    border-radius:10px;box-shadow:0 10px 30px rgba(30,22,60,.16);padding:5px;display:none;min-width:186px;
+  /* ---------- 下载格式选择 ---------- */
+  .fmt-choices{display:flex;flex-direction:column;gap:7px;}
+  .fmt-choice{
+    display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;
+    transition:.15s;
   }
-  .popover.show{display:block;}
-  .popover .po-head{font-size:10.5px;color:var(--text-3);padding:5px 9px 4px;letter-spacing:.3px;}
-  .popover button{
-    display:flex;width:100%;align-items:center;gap:8px;text-align:left;
-    padding:7px 9px;border-radius:7px;font-size:12.5px;color:var(--text-2);
+  .fmt-choice:hover{border-color:var(--brand);background:#FBFAFF;box-shadow:0 0 0 3px rgba(108,75,244,.08);}
+  .fmt-choice .fmt{
+    flex:0 0 auto;font-size:10.5px;font-weight:600;background:#F1EFFA;color:#6B5FA8;
+    border-radius:4px;padding:3px 7px;letter-spacing:.3px;
   }
-  .popover button:hover{background:#F6F4FE;color:var(--brand-deep);}
-  .popover button .fmt{
-    font-size:10px;background:#F1EFFA;color:#6B5FA8;border-radius:3px;padding:1px 4px;font-weight:600;
-  }
-  .popover .sep{height:1px;background:var(--line);margin:4px 6px;}
+  .fmt-choice .fmt-desc{font-size:12px;color:var(--text-3);line-height:1.5;}
+  .modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px 18px;}
 
   /* ---------- toast ---------- */
   .toasts{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;}
@@ -634,12 +630,36 @@
   </div>
 </div>
 
-<!-- 下载格式浮层：三种文件单独下载，不提供打包 -->
-<div class="popover" id="fmtPop">
-  <div class="po-head">选择下载格式</div>
-  <button data-fmt="pdf"><span class="fmt">PDF</span>下载 PDF</button>
-  <button data-fmt="ofd"><span class="fmt">OFD</span>下载 OFD</button>
-  <button data-fmt="xml"><span class="fmt">XML</span>下载 明细 XML</button>
+<!-- 下载格式选择弹窗：点击「下载」后弹出，三种文件单独下载 -->
+<div class="modal" id="fmtModal">
+  <div class="modal-card" style="width:400px">
+    <div class="modal-head">
+      <div class="modal-icon" style="background:#F1EEFC;color:#6C4BF4">⤓</div>
+      <div>
+        <h3>选择文件格式</h3>
+        <p id="fmtModalSub">发票文件可单独下载，请选择需要的格式。</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="fmt-choices">
+        <button class="fmt-choice" data-fmt="pdf">
+          <span class="fmt">PDF</span>
+          <span class="fmt-desc">版式文件，可直接查看与打印</span>
+        </button>
+        <button class="fmt-choice" data-fmt="ofd">
+          <span class="fmt">OFD</span>
+          <span class="fmt-desc">国标版式文件，用于报销归档</span>
+        </button>
+        <button class="fmt-choice" data-fmt="xml">
+          <span class="fmt">XML</span>
+          <span class="fmt-desc">发票明细数据，用于财务系统导入</span>
+        </button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="fmtCancel">取消</button>
+    </div>
+  </div>
 </div>
 
 <div class="toasts" id="toasts"></div>
@@ -738,8 +758,7 @@ function renderTable(){
       <td>
         <div class="row-actions">
           <div class="dl-group">
-            <button data-dl="${r.id}" data-fmt="pdf" title="下载 PDF（右侧可选择 OFD / XML）">下载</button>
-            <button class="caret" data-caret="${r.id}" title="选择下载格式">▾</button>
+            <button data-dl="${r.id}" title="选择文件格式下载">下载</button>
           </div>
           ${voidHtml}
         </div>
@@ -768,45 +787,43 @@ document.getElementById('tbody').addEventListener('click', e => {
   if(copy){ navigator.clipboard?.writeText(copy.dataset.copy); toast('已复制申请记录 ID'); return; }
 
   const dl = e.target.closest('[data-dl]');
-  if(dl){ doDownload(dl.dataset.dl, dl.dataset.fmt); return; }
-
-  const caret = e.target.closest('[data-caret]');
-  if(caret){ openFmtPop(caret, caret.dataset.caret); return; }
+  if(dl){ openFmtModal(dl.dataset.dl); return; }
 
   const vb = e.target.closest('[data-void]');
   if(vb && !vb.disabled){ openVoid(vb.dataset.void); return; }
 });
 
-/* 下载：PDF / OFD / XML 三种文件各自单独下载，不做打包 */
+/* 下载：点击「下载」先弹窗选择格式，PDF / OFD / XML 三种文件各自单独下载 */
+const fmtModal = document.getElementById('fmtModal');
+let fmtRowId = null;
+
+function openFmtModal(id){
+  const r = rows.find(x => x.id === id);
+  if(!r) return;
+  fmtRowId = id;
+  document.getElementById('fmtModalSub').innerHTML =
+    '票号 <b>' + (r.no || '—') + '</b> · ' + r.title
+    + '<br>请选择需要的文件格式，三种文件可分别下载。';
+  fmtModal.classList.add('show');
+}
+function closeFmtModal(){
+  fmtModal.classList.remove('show');
+  fmtRowId = null;
+}
 function doDownload(id, fmt){
   const map = { pdf:'PDF 文件', ofd:'OFD 文件', xml:'明细 XML 文件' };
   const r = rows.find(x => x.id === id);
   toast('正在下载「' + (map[fmt] || fmt) + '」· 票号 ' + (r?.no || '—'));
-  closeFmtPop();
+  closeFmtModal();
 }
 
-/* 格式浮层 */
-const fmtPop = document.getElementById('fmtPop');
-let fmtRowId = null;
-function openFmtPop(anchor, id){
-  fmtRowId = id;
-  const rect = anchor.getBoundingClientRect();
-  fmtPop.classList.add('show');
-  const w = fmtPop.offsetWidth, h = fmtPop.offsetHeight;
-  let left = rect.right - w;
-  let top = rect.bottom + 6;
-  if(top + h > window.innerHeight - 8) top = rect.top - h - 6;
-  fmtPop.style.left = Math.max(8, left) + 'px';
-  fmtPop.style.top = top + 'px';
-}
-function closeFmtPop(){ fmtPop.classList.remove('show'); fmtRowId = null; }
-fmtPop.addEventListener('click', e => {
+fmtModal.addEventListener('click', e => {
   const b = e.target.closest('[data-fmt]');
-  if(b && fmtRowId) doDownload(fmtRowId, b.dataset.fmt);
+  if(b){ doDownload(fmtRowId, b.dataset.fmt); return; }
+  /* 点遮罩关闭 */
+  if(e.target === fmtModal) closeFmtModal();
 });
-document.addEventListener('click', e => {
-  if(!e.target.closest('#fmtPop') && !e.target.closest('[data-caret]')) closeFmtPop();
-});
+document.getElementById('fmtCancel').onclick = closeFmtModal;
 
 /* ============ 作废 ============ */
 const voidModal = document.getElementById('voidModal');
