@@ -948,8 +948,9 @@ const COMPANY_TITLE = { name:'杭州云枢科技有限公司', tax:'91330106MA2H
 
 function buildTitleOptions(amt){
   const sel = document.getElementById('titleSelect');
-  const over = amt > 5000;
   const personal = cert === 'personal';
+  /* 5000 上限只约束个人认证；企业认证不设金额限制 */
+  const over = personal && amt > 5000;
   sel.innerHTML = '';
 
   if(personal){
@@ -1119,16 +1120,16 @@ function evaluate(){
     return;
   }
 
-  /* 普票 > 5000 → 特殊开票申请（人工），抬头仅可选个人 */
-  if(amt > 5000){
+  /* 个人认证普票 > 5000 → 只能个人抬头，机构抬头需走登记（人工）
+     企业认证不设金额上限，任何金额均可自助开具 */
+  if(cert === 'personal' && amt > 5000){
     mode = 'specialApply';
     limitBlock.style.display = 'flex';
-    document.getElementById('limitBlockTxt').innerHTML = cert === 'personal'
-      ? '<b>个人认证</b>账户自助开具机构抬头的增值税普通发票，单张金额上限为 <b>¥5,000</b>，'
-        + '因此本单只能选择<b>个人抬头</b>。'
-        + '<br>如确需按机构抬头发票开具，且可配合提供相应证明材料，请'
-        + '<a class="goForm" id="regLink2">点击这里登记</a>。'
-      : '单张金额超过 <b>¥5,000</b>，需提交特殊开票申请，经财务审核后人工开具。';
+    document.getElementById('limitBlockTxt').innerHTML =
+      '<b>个人认证</b>账户自助开具机构抬头的增值税普通发票，单张金额上限为 <b>¥5,000</b>，'
+      + '因此本单只能选择<b>个人抬头</b>。'
+      + '<br>如确需按机构抬头发票开具，且可配合提供相应证明材料，请'
+      + '<a class="goForm" id="regLink2">点击这里登记</a>。';
     submitBtn.textContent = '提交特殊开票申请';
     submitBtn.disabled = amountInvalid;
     footNote.innerHTML = '需财务审核后人工开具，预计 <b>3～5 个工作日</b>。';
