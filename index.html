@@ -248,8 +248,10 @@
   .amount-card .cap{font-size:12px;color:#6B6383;margin-bottom:5px;}
   .amount-card .val{font-size:22px;font-weight:700;color:var(--brand-deep);font-variant-numeric:tabular-nums;letter-spacing:-.5px;}
   .amount-card .val span{font-size:13px;font-weight:500;}
-  .amount-card .sum{font-size:11.5px;color:#7B7392;margin-top:7px;line-height:1.7;}
-  .amount-card .sum i{font-style:normal;color:#B0A9C6;margin:0 3px;}
+  .amount-card .sum{font-size:11.5px;color:#7B7392;margin-top:7px;line-height:1.75;}
+  .amount-card .sum b{font-weight:600;color:#4A4360;font-variant-numeric:tabular-nums;}
+  .amount-card .sum b.res{color:var(--brand-deep);}
+  .amount-card .sum i{font-style:normal;color:#8B84A3;margin:0 4px;font-weight:600;}
 
   .field{margin-bottom:14px;}
   .field > label.lbl{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-2);margin-bottom:6px;}
@@ -506,7 +508,9 @@
     <div class="amount-card">
       <div class="cap">可开票金额</div>
       <div class="val">¥ <span id="availTxt">12,860.42</span></div>
-      <div class="sum">累计已消费金额 ¥12,860.42 <i>·</i> 欠款 ¥0.00 <i>·</i> 累计已开票金额 ¥0.00</div>
+      <div class="sum" id="availSum">
+        累计已消费金额 <b>¥12,860.42</b> <i>−</i> 欠款 <b>¥0.00</b> <i>−</i> 累计已开票金额 <b>¥0.00</b> <i>=</i> <b class="res">¥12,860.42</b>
+      </div>
     </div>
 
     <div class="field">
@@ -666,7 +670,11 @@
 
 <script>
 /* ============ 数据 ============ */
-const AVAILABLE = 12860.42;
+/* 可开票金额 = 累计已消费金额 − 欠款 − 累计已开票金额 */
+const CONSUMED = 12860.42;   /* 累计已消费金额 */
+const ARREARS  = 0;          /* 欠款 */
+const INVOICED = 0;          /* 累计已开票金额 */
+const AVAILABLE = +(CONSUMED - ARREARS - INVOICED).toFixed(2);
 
 /* 票据模型：
    kind: 'blue' 蓝票（正常开具） | 'red' 红票（负数冲销，成对出现在蓝票作废后）
@@ -1026,7 +1034,14 @@ function renderSplit(){
 
 function applyCert(){
   const personal = cert === 'personal';
-  document.getElementById('availTxt').textContent = AVAILABLE.toLocaleString('zh-CN',{minimumFractionDigits:2});
+  const fmt = v => v.toLocaleString('zh-CN',{minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('availTxt').textContent = fmt(AVAILABLE);
+  /* 金额卡片下方的计算式：明确「哪一项减去哪几项」 */
+  document.getElementById('availSum').innerHTML =
+    '累计已消费金额 <b>¥' + fmt(CONSUMED) + '</b> <i>−</i> '
+    + '欠款 <b>¥' + fmt(ARREARS) + '</b> <i>−</i> '
+    + '累计已开票金额 <b>¥' + fmt(INVOICED) + '</b> <i>=</i> '
+    + '<b class="res">¥' + fmt(AVAILABLE) + '</b>';
   buildTitleOptions(num(amountEl.value));
   evaluate();
 }
